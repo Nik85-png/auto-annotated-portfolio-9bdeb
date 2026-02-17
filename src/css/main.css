@@ -138,6 +138,14 @@ layer(base);
             content: none;
         }
     }
+
+    /* Allow embedded interactive tools to break out of narrow prose width. */
+    .prose iframe[data-cards-embed='1'] {
+        width: min(1120px, calc(100vw - 2rem));
+        max-width: none;
+        margin-left: 50%;
+        transform: translateX(-50%);
+    }
 }
 
 @utility bottom-shadow-* {

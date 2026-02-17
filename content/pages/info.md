@@ -1,6 +1,9 @@
----
+﻿---
 type: PageLayout
-title: About
+title: About Myself / CV
+metaTitle: About Myself / CV
+metaDescription: MSc Data Analytics profile of Nikunj Prajapati, blending behavioural analysis, predictive modelling, and compliance-focused data operations.
+socialImage: /images/about.jpg
 colors: colors-a
 backgroundImage:
   type: BackgroundImage
@@ -8,21 +11,32 @@ backgroundImage:
   backgroundSize: cover
   backgroundPosition: center
   backgroundRepeat: no-repeat
-  opacity: 75
+  opacity: 70
 sections:
-  - elementId: ''
+  - type: HeroSection
+    elementId: info-hero
     colors: colors-f
     backgroundSize: full
     text: >+
-      # Hey I’m a developer. I’ve been born and raised in the world, and that’s
-      also where I’m based. I’m currently a free agent, ex-this, ex-that,
-      ex-super big name. When I’m not coding, writing or creating, I eat
-      cereals. I have a dog, check her out [@mygod](https://www.stackbit.com/).
+      # Data Analytics Postgraduate | Admin Professional | Behavioural Data Explorer
 
+      I am currently completing my MSc in Data Analytics at London Metropolitan
+      University.
+
+      I combine three strengths: mathematical precision, behavioural
+      understanding, and real-world administrative data experience.
+
+      By day, I work in healthcare administration managing structured client
+      records, reviewing operational logs, and supporting compliance audits.
+      By training, I build analytical models, clean behavioural datasets, and
+      explore whether patterns predict outcomes.
+
+      I am especially interested in behavioural analytics, predictive modelling,
+      data quality, and turning messy datasets into meaningful insight.
     media:
       type: ImageBlock
-      url: /images/about.jpg
-      altText: Hero image
+      url: /images/nikunj-profile.jpg
+      altText: Nikunj Prajapati
     styles:
       self:
         height: auto
@@ -38,57 +52,6 @@ sections:
           - pl-4
           - pr-4
         textAlign: left
-    type: HeroSection
-  - type: DividerSection
-    styles:
-      self:
-        width: wide
-        padding:
-          - pt-8
-          - pb-8
-          - pl-4
-          - pr-4
-        borderWidth: 1
-        borderStyle: solid
-  - type: MediaGallerySection
-    colors: colors-f
-    subtitle: 'I worked with these folks:'
-    images:
-      - type: ImageBlock
-        url: /images/logo1.svg
-        altText: Logo one
-        caption: Logo one
-      - type: ImageBlock
-        url: /images/logo2.svg
-        altText: Logo two
-        caption: Logo two
-      - type: ImageBlock
-        url: /images/logo3.svg
-        altText: Logo three
-        caption: Logo three
-      - type: ImageBlock
-        url: /images/logo4.svg
-        altText: Logo four
-        caption: Logo four
-      - type: ImageBlock
-        url: /images/logo5.svg
-        altText: Logo five
-        caption: Logo five
-    spacing: 3
-    columns: 5
-    aspectRatio: auto
-    showCaption: false
-    enableHover: false
-    styles:
-      self:
-        width: wide
-        height: auto
-        padding:
-          - pt-8
-          - pb-8
-          - pl-4
-          - pr-4
-        textAlign: left
   - type: DividerSection
     styles:
       self:
@@ -101,22 +64,14 @@ sections:
         borderWidth: 1
         borderStyle: solid
   - type: FeaturedItemsSection
-    subtitle: 'You can find me here:'
+    subtitle: Connect
     colors: colors-f
     items:
       - type: FeaturedItem
         actions:
           - type: Link
             label: GitHub
-            url: 'https://github.com/'
-        styles:
-          self:
-            textAlign: left
-      - type: FeaturedItem
-        actions:
-          - type: Link
-            label: Twitter
-            url: 'https://twitter.com/'
+            url: https://github.com/Nik85-png
         styles:
           self:
             textAlign: left
@@ -124,36 +79,20 @@ sections:
         actions:
           - type: Link
             label: LinkedIn
-            url: 'https://www.linkedin.com/'
+            url: https://www.linkedin.com/in/nikunj-prajapati-b8a3b7232
         styles:
           self:
             textAlign: left
       - type: FeaturedItem
         actions:
           - type: Link
-            label: CodePen
-            url: 'https://codepen.io/'
-        styles:
-          self:
-            textAlign: left
-      - type: FeaturedItem
-        actions:
-          - type: Link
-            label: Discord
-            url: 'https://discord.com/'
-        styles:
-          self:
-            textAlign: left
-      - type: FeaturedItem
-        actions:
-          - type: Link
-            label: Instagram
-            url: 'https://www.instagram.com/'
+            label: Email
+            url: mailto:prajapatinick85@gmail.com
         styles:
           self:
             textAlign: left
     columns: 3
-    spacingX: 120
+    spacingX: 80
     spacingY: 16
     styles:
       self:
@@ -169,32 +108,34 @@ sections:
       self:
         width: wide
         padding:
-          - pt-12
-          - pb-12
+          - pt-8
+          - pb-8
           - pl-4
           - pr-4
         borderWidth: 1
         borderStyle: solid
   - type: LabelsSection
     colors: colors-f
-    subtitle: 'Skills:'
+    subtitle: Technical Focus
     items:
       - type: Label
-        label: 'WEB 1, 2, 3'
+        label: Python (pandas, NumPy, scikit-learn)
       - type: Label
-        label: React
+        label: SQL
       - type: Label
-        label: Microsoft Office
+        label: R
       - type: Label
-        label: Next.js
+        label: Power BI
       - type: Label
-        label: Netlify
+        label: Statistical Modelling
       - type: Label
-        label: Pancakes
+        label: Predictive Analytics
       - type: Label
-        label: C++
+        label: Data Cleaning
       - type: Label
-        label: Swift
+        label: Feature Engineering
+      - type: Label
+        label: Data Visualisation
   - type: DividerSection
     styles:
       self:
@@ -202,23 +143,6 @@ sections:
         padding:
           - pt-12
           - pb-12
-          - pl-4
-          - pr-4
-        borderWidth: 1
-        borderStyle: solid
-  - type: TextSection
-    variant: variant-a
-    subtitle: 'Contact:'
-    colors: colors-f
-    text: |
-      [thisismyemail.@myemail.me](mailto:thisismyemail.@myemail.me)
-  - type: DividerSection
-    styles:
-      self:
-        width: wide
-        padding:
-          - pt-8
-          - pb-8
           - pl-4
           - pr-4
         borderWidth: 1
@@ -227,44 +151,96 @@ sections:
     colors: colors-f
     items:
       - type: FeaturedItem
-        subtitle: 'Experience:'
+        subtitle: Experience
         text: |-
-          **Current**
+          **Current Role - PHC Home Care (Healthcare Administration)**
 
-          * freelance @freelance.me
+          * Maintain care plans and risk assessments across systems
+          * Validate daily logs for data consistency and completeness
+          * Track incidents and support reporting processes
+          * Prepare datasets for audits and regulatory reviews
 
-          **2018-2021**
-
-          * fullstack at this startup
-
-          **2015**
-
-          * senior front-end at this place
-
-          **2013**
-
-          * intern developer at a big company
-
-          **2011**
-
-          * flipping burgers
+          This is sensitive, real-world data where integrity and accuracy have
+          direct operational consequences.
         styles:
           self:
             textAlign: left
       - type: FeaturedItem
-        subtitle: 'Education:'
+        subtitle: Education
         text: |-
-          **2015-2018**
+          **MSc Data Analytics**
 
-          * ba computer sciense at a semi fancy school
+          * London Metropolitan University
+          * Expected 2026
 
-          **2014**
+          **BSc Mathematics - Gujarat University**
 
-          * react certificate somewhere
+          * Logical reasoning
+          * Quantitative analysis
+          * Numerical accuracy
+          * Structured problem solving
 
-          **2011**
+          **BSc Education - Gujarat University**
 
-          * my highschool
+          * Communication clarity
+          * Behavioural understanding
+          * Structured planning
+          * Conflict management
+        styles:
+          self:
+            textAlign: left
+    columns: 2
+    spacingX: 60
+    spacingY: 60
+    styles:
+      self:
+        height: auto
+        width: wide
+        padding:
+          - pt-8
+          - pb-8
+          - pl-4
+          - pr-4
+        textAlign: left
+  - type: DividerSection
+    styles:
+      self:
+        width: wide
+        padding:
+          - pt-12
+          - pb-12
+          - pl-4
+          - pr-4
+        borderWidth: 1
+        borderStyle: solid
+  - type: FeaturedItemsSection
+    colors: colors-f
+    items:
+      - type: FeaturedItem
+        subtitle: Professional Skills
+        text: |-
+          * Attention to detail
+          * Data integrity and compliance
+          * Analytical thinking
+          * Clear communication
+          * Process improvement
+          * Stakeholder collaboration
+          * Professionalism under pressure
+          * Confidential data handling
+        styles:
+          self:
+            textAlign: left
+      - type: FeaturedItem
+        subtitle: Beyond Work
+        text: |-
+          * Ancient history (especially Egypt)
+          * Fitness and running
+          * Reading self-development and self-help books
+          * Continuous learning as a personal hobby
+
+          Math trained my thinking.
+          Education trained my communication.
+          Data analytics connects both.
         styles:
           self:
             textAlign: left
@@ -294,46 +270,34 @@ sections:
         borderStyle: solid
   - type: ContactSection
     backgroundSize: full
-    title: "Let’s talk... \U0001F4AC"
+    title: Lets build something insightful
     colors: colors-f
     form:
       type: FormBlock
-      elementId: sign-up-form
+      elementId: contact-info
       fields:
-        - name: firstName
-          label: First Name
+        - type: TextFormControl
+          name: name
+          label: Name
           hideLabel: true
-          placeholder: First Name
+          placeholder: Name
           isRequired: true
           width: 1/2
-          type: TextFormControl
-        - name: lastName
-          label: Last Name
-          hideLabel: true
-          placeholder: Last Name
-          isRequired: false
-          width: 1/2
-          type: TextFormControl
-        - name: email
+        - type: EmailFormControl
+          name: email
           label: Email
           hideLabel: true
           placeholder: Email
           isRequired: true
-          width: full
-          type: EmailFormControl
-        - name: message
+          width: 1/2
+        - type: TextareaFormControl
+          name: message
           label: Message
           hideLabel: true
-          placeholder: Tell me about your project
+          placeholder: Tell me what you are building
           isRequired: true
           width: full
-          type: TextareaFormControl
-        - name: updatesConsent
-          label: Sign me up to recieve my words
-          isRequired: false
-          width: full
-          type: CheckboxFormControl
-      submitLabel: "Submit \U0001F680"
+      submitLabel: Send
       styles:
         self:
           textAlign: center

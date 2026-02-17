@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Card Sorting Analysis</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+</head>
+<body>
+    <div id="app" class="container">
+        <header class="header">
+            <h1>Interactive Card Sorting Analysis</h1>
+            <p>Spatial organization, strategy quality, and blank-card usage.</p>
+        </header>
+
+        <section class="stats" id="stats"></section>
+
+        <section class="controls card">
+            <label for="analysisSelect">Analysis Type</label>
+            <select id="analysisSelect"></select>
+            <p id="analysisExplanation" class="muted"></p>
+
+            <label for="trialSelect">Trial</label>
+            <select id="trialSelect"></select>
+
+            <div class="buttons">
+                <button id="resetBtn" type="button">Reset</button>
+                <button id="prevBtn" type="button">Prev</button>
+                <button id="playBtn" type="button" class="primary">Play</button>
+                <button id="nextBtn" type="button">Next</button>
+            </div>
+
+            <label for="speedRange">Speed: <span id="speedLabel">1.2x</span></label>
+            <input id="speedRange" type="range" min="150" max="2000" value="800" />
+            <p id="moveCounter" class="counter">Move 0 / 0</p>
+        </section>
+
+        <section class="content-grid">
+            <div class="card table-wrap">
+                <div id="grid" class="grid"></div>
+            </div>
+            <div class="stack">
+                <div class="card">
+                    <h3>Trial Details</h3>
+                    <div id="trialInfo" class="muted">Loading...</div>
+                </div>
+                <div class="card">
+                    <h3>Legend</h3>
+                    <p class="muted">
+                        Gold border: current move<br />
+                        Gray card: blank card in merged timeline<br />
+                        8x8 grid coordinates: rows/cols 0..7
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section class="charts">
+            <div class="card"><h3>Trial Summary</h3><div id="summaryChart"></div></div>
+            <div class="card"><h3>Messiness Deterioration</h3><div id="messinessChart"></div></div>
+            <div class="card"><h3>Blank Card Advantage</h3><div id="blankChart"></div></div>
+        </section>
+    </div>
+
+    <script>
+        window.CARDS_CONFIG = {
+            parentOrigin: "{{ parent_origin }}"
+        };
+    </script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

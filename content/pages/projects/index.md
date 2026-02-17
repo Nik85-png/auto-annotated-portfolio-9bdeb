@@ -1,18 +1,21 @@
----
+﻿---
 type: ProjectFeedLayout
 title: Projects
+metaTitle: Projects
+metaDescription: Featured behavioural analytics project by Nikunj Prajapati.
+socialImage: /images/featured-Image2.jpg
 colors: colors-a
 backgroundImage:
   type: BackgroundImage
-  url: /images/bg1.jpg
+  url: /images/bg3.jpg
   backgroundSize: cover
   backgroundPosition: center
   backgroundRepeat: no-repeat
-  opacity: 50
+  opacity: 55
 projectFeed:
   type: ProjectFeedSection
   colors: colors-f
-  showDate: false
+  showDate: true
   showDescription: true
   showReadMoreLink: true
   showFeaturedImage: true
@@ -27,12 +30,12 @@ projectFeed:
         - pb-12
 topSections:
   - type: HeroSection
-    title: Projects
-    subtitle: ''
+    title: Project
+    subtitle: Featured behavioural movement analysis research project.
     actions: []
     colors: colors-f
     backgroundSize: full
-    elementId: ''
+    elementId: projects-hero
     styles:
       self:
         height: auto
@@ -47,46 +50,41 @@ topSections:
 bottomSections:
   - type: ContactSection
     backgroundSize: full
-    title: "Let’s talk... \U0001F4AC"
+    title: Working on something data driven?
     colors: colors-f
     form:
       type: FormBlock
-      elementId: sign-up-form
+      elementId: contact-projects
       fields:
-        - name: firstName
+        - type: TextFormControl
+          name: firstName
           label: First Name
           hideLabel: true
           placeholder: First Name
           isRequired: true
           width: 1/2
-          type: TextFormControl
-        - name: lastName
+        - type: TextFormControl
+          name: lastName
           label: Last Name
           hideLabel: true
           placeholder: Last Name
           isRequired: false
           width: 1/2
-          type: TextFormControl
-        - name: email
+        - type: EmailFormControl
+          name: email
           label: Email
           hideLabel: true
           placeholder: Email
           isRequired: true
           width: full
-          type: EmailFormControl
-        - name: message
+        - type: TextareaFormControl
+          name: message
           label: Message
           hideLabel: true
-          placeholder: Tell me about your project
+          placeholder: Share your dataset or project context
           isRequired: true
           width: full
-          type: TextareaFormControl
-        - name: updatesConsent
-          label: Sign me up to recieve my words
-          isRequired: false
-          width: full
-          type: CheckboxFormControl
-      submitLabel: "Submit \U0001F680"
+      submitLabel: Send message
       styles:
         self:
           textAlign: center

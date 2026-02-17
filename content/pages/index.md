@@ -1,6 +1,9 @@
----
+﻿---
 type: PageLayout
 title: Home
+metaTitle: Home
+metaDescription: Data analytics portfolio of Nikunj Prajapati, focused on behavioural analysis, predictive modelling, and structured operational data.
+socialImage: /images/featured-Image6.jpg
 colors: colors-a
 backgroundImage:
   type: BackgroundImage
@@ -8,18 +11,25 @@ backgroundImage:
   backgroundSize: cover
   backgroundPosition: center
   backgroundRepeat: no-repeat
-  opacity: 75
+  opacity: 65
 sections:
-  - elementId: ''
+  - type: HeroSection
+    elementId: home-hero
     colors: colors-f
     backgroundSize: full
-    title: >-
-      I’m a developer, digital artist, consultant and a bunch of other
-      impressive titles and buzz words.
+    title: Data Analytics Postgraduate | Admin Professional | Behavioural Data Explorer
     subtitle: >-
-      This is my info—I’m sharing it all this with ya’ll to impress you with all
-      the hard work I’ve done in the past few years. Once you’re impressed, you
-      can continue to scroll down to see more details and credentials about me.
+      I am a data analytics postgraduate based in London. I work with structured
+      datasets, behavioural patterns, compliance systems, and the kind of messy
+      real-world data that does not clean itself. This is my space to show the
+      work behind the titles: how I think, build, analyse, and improve systems.
+    actions:
+      - type: Link
+        label: Explore projects
+        url: /projects
+      - type: Link
+        label: Know about me
+        url: /info
     styles:
       self:
         height: auto
@@ -31,29 +41,46 @@ sections:
           - mr-0
         padding:
           - pt-36
-          - pb-48
+          - pb-40
           - pl-4
           - pr-4
-        flexDirection: row-reverse
+        flexDirection: row
         textAlign: left
-    type: HeroSection
-    actions: []
-  - colors: colors-f
-    type: FeaturedProjectsSection
-    elementId: ''
+  - type: CtaSection
+    elementId: home-about-cta
+    colors: colors-f
+    title: Know About Me
+    text: >-
+      Explore my background, education, technical focus, and professional
+      profile in one place.
+    actions:
+      - type: Link
+        label: About Myself / CV
+        url: /info
+    styles:
+      self:
+        width: wide
+        padding:
+          - pt-10
+          - pb-10
+          - pl-4
+          - pr-4
+        textAlign: left
+  - type: FeaturedProjectsSection
+    elementId: home-projects
+    colors: colors-f
+    subtitle: Featured Project
     actions:
       - type: Link
         label: See all projects
         url: /projects
-    showDate: false
+    showDate: true
     showDescription: true
     showFeaturedImage: true
     showReadMoreLink: true
     variant: variant-b
     projects:
-      - content/pages/projects/project-two.md
-      - content/pages/projects/project-three.md
-      - content/pages/projects/project-one.md
+      - content/pages/projects/cards-project.md
     styles:
       self:
         height: auto
@@ -64,76 +91,43 @@ sections:
           - pl-4
           - pr-4
         textAlign: left
-    subtitle: Projects
-  - type: FeaturedPostsSection
-    elementId: ''
-    colors: colors-f
-    variant: variant-d
-    subtitle: Featured Posts
-    showFeaturedImage: false
-    actions:
-      - type: Link
-        label: See all posts
-        url: /blog
-    posts:
-      - content/pages/blog/post-six.md
-      - content/pages/blog/post-four.md
-      - content/pages/blog/post-three.md
-    showDate: true
-    showExcerpt: true
-    showReadMoreLink: true
-    styles:
-      self:
-        height: auto
-        width: narrow
-        padding:
-          - pt-28
-          - pb-48
-          - pl-4
-          - pr-4
-        textAlign: left
   - type: ContactSection
     colors: colors-f
     backgroundSize: full
-    title: "Got an interesting project? Tell me more...\U0001F4AC"
+    title: Lets build something insightful
     form:
       type: FormBlock
-      elementId: sign-up-form
+      elementId: contact-home
       fields:
-        - name: firstName
+        - type: TextFormControl
+          name: firstName
           label: First Name
           hideLabel: true
           placeholder: First Name
           isRequired: true
           width: 1/2
-          type: TextFormControl
-        - name: lastName
+        - type: TextFormControl
+          name: lastName
           label: Last Name
           hideLabel: true
           placeholder: Last Name
           isRequired: false
           width: 1/2
-          type: TextFormControl
-        - name: email
+        - type: EmailFormControl
+          name: email
           label: Email
           hideLabel: true
           placeholder: Email
           isRequired: true
-          width: 1/2
-          type: EmailFormControl
-        - name: address
-          label: Address
-          hideLabel: true
-          placeholder: Address
-          isRequired: true
-          width: 1/2
-          type: TextFormControl
-        - name: updatesConsent
-          label: Sign me up to recieve updates
-          isRequired: false
           width: full
-          type: CheckboxFormControl
-      submitLabel: "Submit \U0001F680"
+        - type: TextareaFormControl
+          name: message
+          label: Message
+          hideLabel: true
+          placeholder: Tell me about your project or analysis goal
+          isRequired: true
+          width: full
+      submitLabel: Send message
       styles:
         self:
           textAlign: center

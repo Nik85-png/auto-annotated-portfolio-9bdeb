@@ -1,31 +1,31 @@
 import classNames from 'classnames';
-import * as React from 'react';
 
 import { Annotated } from '@/components/Annotated';
 import { DynamicComponent } from '@/components/components-registry';
 import { mapStylesToClassNames as mapStyles } from '@/utils/map-styles-to-class-names';
 
 export default function FormBlock(props) {
-    const formRef = React.createRef<HTMLFormElement>();
     const { elementId, className, fields = [], submitLabel, styles = {} } = props;
+    const formName = elementId || 'contact-form';
 
     if (fields.length === 0) {
         return null;
     }
 
-    function handleSubmit(event) {
-        event.preventDefault();
-
-        const data = new FormData(formRef.current);
-        const value = Object.fromEntries(data.entries());
-        alert(`Form data: ${JSON.stringify(value)}`);
-    }
-
     return (
         <Annotated content={props}>
-            <form className={className} name={elementId} id={elementId} onSubmit={handleSubmit} ref={formRef}>
+            <form
+                className={className}
+                name={formName}
+                id={formName}
+                method="POST"
+                action="/thanks"
+                data-netlify="true"
+                netlify-honeypot="bot-field"
+            >
                 <div className="grid gap-6 sm:grid-cols-2">
-                    <input type="hidden" name="form-name" value={elementId} />
+                    <input type="hidden" name="form-name" value={formName} />
+                    <input type="hidden" name="bot-field" />
                     {fields.map((field, index) => {
                         return <DynamicComponent key={index} {...field} />;
                     })}
