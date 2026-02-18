@@ -30,6 +30,14 @@ Core question: what separates successful problem-solvers from those who struggle
 
 [Open the interactive analysis explorer in a new page](/cards-analysis/index.html)
 
+<a
+  href="https://auto-annotated-portfolio-9bdeb.onrender.com/play"
+  data-cards-play-cta="1"
+  style="display:none;margin-top:12px;padding:10px 14px;border-radius:10px;background:#146c94;color:#f2f5f7;text-decoration:none;"
+>
+  Try It Yourself (Beta)
+</a>
+
 ## Live Interactive Viewer
 
 <iframe

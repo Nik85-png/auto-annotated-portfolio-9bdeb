@@ -36,6 +36,29 @@ export default function MyApp({ Component, pageProps }) {
     }, []);
 
     useEffect(() => {
+        const enablePlayground = (process.env.NEXT_PUBLIC_ENABLE_PLAYGROUND || '').toLowerCase() === 'true';
+        if (!enablePlayground) return;
+
+        const externalEmbedUrl = process.env.NEXT_PUBLIC_CARDS_EMBED_URL || '';
+        const playUrl = `${externalEmbedUrl.replace(/\/+$/, '')}/play`;
+
+        function revealPlaygroundCtas() {
+            const links = document.querySelectorAll("[data-cards-play-cta='1']");
+            links.forEach((link) => {
+                link.style.display = 'inline-block';
+                if (externalEmbedUrl) {
+                    link.setAttribute('href', playUrl);
+                }
+            });
+        }
+
+        revealPlaygroundCtas();
+        const observer = new MutationObserver(() => revealPlaygroundCtas());
+        observer.observe(document.body, { childList: true, subtree: true });
+        return () => observer.disconnect();
+    }, []);
+
+    useEffect(() => {
         const minHeight = 520;
         const maxHeight = 1800;
         const threshold = 8;
