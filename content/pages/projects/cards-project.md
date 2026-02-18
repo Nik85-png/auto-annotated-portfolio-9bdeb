@@ -37,7 +37,7 @@ Core question: what separates successful problem-solvers from those who struggle
   title="Interactive Card Sorting Analysis"
   data-cards-embed="1"
   data-cards-embed-fallback="local"
-  style="width:100%;min-height:620px;border:0;border-radius:12px;background:transparent;"
+  style="width:100%;min-height:1240px;border:0;border-radius:12px;background:transparent;"
   loading="lazy"
 ></iframe>
 
