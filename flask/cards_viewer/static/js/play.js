@@ -1,4 +1,4 @@
-const state = {
+﻿const state = {
     visitorId: localStorage.getItem('cards_visitor_token') || '',
     displayName: localStorage.getItem('cards_display_name') || '',
     condition: 'KQJB',
@@ -46,12 +46,12 @@ function drawPalette() {
     CARD_PALETTE.forEach((card, idx) => {
         const b = document.createElement('button');
         b.type = 'button';
-        const txt = card.is_blank ? '□' : `${card.value}${card.suit_symbol}`;
-        b.textContent = txt;
+        b.textContent = card.is_blank ? '□' : `${card.value}${card.suit_symbol}`;
         if (state.selectedCard === idx) b.classList.add('active');
         b.onclick = () => {
             state.selectedCard = idx;
             drawPalette();
+            setStatus(`Selected ${card.is_blank ? 'BLANK' : `${card.value}${card.suit_symbol}`}`);
         };
         root.appendChild(b);
     });
@@ -77,11 +77,23 @@ async function submitMove(move) {
     }
 }
 
+async function ensureSessionStarted() {
+    if (state.started && state.sessionId) return true;
+    try {
+        await startSession();
+        return true;
+    } catch (err) {
+        setStatus(err.message || 'Failed to start session');
+        return false;
+    }
+}
+
 function drawBoard() {
     const root = $('board');
     root.innerHTML = '';
     root.innerHTML += '<div class="cell head"></div>';
     for (let c = 0; c < 8; c++) root.innerHTML += `<div class="cell head">${c}</div>`;
+
     const map = boardState();
     for (let r = 0; r < 8; r++) {
         root.innerHTML += `<div class="cell head">${r}</div>`;
@@ -90,6 +102,7 @@ function drawBoard() {
             slot.type = 'button';
             slot.className = 'cell slot';
             const m = map[`${r}-${c}`];
+
             if (m) {
                 const blank = m.is_blank || String(m.value).toUpperCase() === 'BLANK';
                 slot.classList.add('filled');
@@ -99,8 +112,15 @@ function drawBoard() {
             } else {
                 slot.textContent = '+';
             }
+
             slot.onclick = async () => {
-                if (!state.started || state.selectedCard === null) return;
+                if (state.selectedCard === null) {
+                    setStatus('Select a card first.');
+                    return;
+                }
+                const ready = await ensureSessionStarted();
+                if (!ready) return;
+
                 const card = CARD_PALETTE[state.selectedCard];
                 const move = {
                     move_index: state.moves.length,
@@ -111,6 +131,7 @@ function drawBoard() {
                     color: card.color,
                     is_blank: !!card.is_blank
                 };
+
                 try {
                     await submitMove(move);
                     state.moves.push(move);
@@ -128,11 +149,13 @@ function drawBoard() {
 async function startSession() {
     state.displayName = $('displayName').value.trim();
     state.condition = $('condition').value;
+
     const payload = {
         condition: state.condition,
         display_name: state.displayName || null,
         visitor_id: state.visitorId || null
     };
+
     const res = await fetch('/api/play/session/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -140,15 +163,18 @@ async function startSession() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to start');
+
     state.sessionId = data.session_id;
     state.visitorId = data.visitor_id;
     state.started = true;
     state.moves = [];
     state.result = null;
+
     localStorage.setItem('cards_visitor_token', state.visitorId);
     if (state.displayName) localStorage.setItem('cards_display_name', state.displayName);
     const last = JSON.parse(localStorage.getItem('cards_last_sessions') || '[]');
     localStorage.setItem('cards_last_sessions', JSON.stringify([state.sessionId, ...last.filter((id) => id !== state.sessionId)].slice(0, 20)));
+
     setStatus(`Session started (${state.sessionId.slice(0, 8)}...)`);
     drawBoard();
     await loadHistory();
@@ -159,12 +185,14 @@ async function completeSession() {
         setStatus('Start a session first.');
         return;
     }
+
     const res = await fetch(`/api/play/session/${state.sessionId}/complete`, { method: 'POST' });
     const data = await res.json();
     if (!res.ok) {
         setStatus(data.error || 'Complete failed');
         return;
     }
+
     state.result = data.result;
     renderResults();
     activateTab('results');
@@ -177,6 +205,7 @@ function renderResults() {
         $('resultsContent').innerHTML = '<p>Complete a trial to see analysis.</p>';
         return;
     }
+
     $('resultsContent').innerHTML = `
         <p><strong>Condition:</strong> ${r.condition}</p>
         <p><strong>Move Count:</strong> ${r.move_count}</p>
@@ -198,13 +227,16 @@ async function loadHistory() {
         $('historyContent').innerHTML = '<p>No sessions yet.</p>';
         return;
     }
+
     const res = await fetch(`/api/play/history?visitor_id=${encodeURIComponent(visitor)}`, { cache: 'no-store' });
     const data = await res.json();
     const sessions = data.sessions || [];
+
     if (!sessions.length) {
         $('historyContent').innerHTML = '<p>No sessions yet.</p>';
         return;
     }
+
     $('historyContent').innerHTML = sessions
         .map((s) => {
             const r = s.result || {};
@@ -218,16 +250,19 @@ async function loadHistory() {
 
 async function exportGif() {
     if (!window.PLAY_CONFIG.enableGif || !state.sessionId) return;
+
     const res = await fetch('/api/play/export/gif', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: state.sessionId })
     });
+
     if (!res.ok) {
         const payload = await res.json().catch(() => ({}));
         setStatus(payload.error || 'GIF export failed');
         return;
     }
+
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -240,6 +275,7 @@ async function exportGif() {
 function bindControls() {
     $('displayName').value = state.displayName;
     $('condition').value = state.condition;
+
     $('startBtn').onclick = () => startSession().catch((e) => setStatus(e.message));
     $('resetBtn').onclick = () => {
         state.moves = [];
@@ -247,6 +283,7 @@ function bindControls() {
         setStatus('Board reset.');
     };
     $('completeBtn').onclick = () => completeSession();
+
     if (window.PLAY_CONFIG.enableGif) {
         $('exportGifBtn').onclick = () => exportGif();
     }
@@ -255,6 +292,7 @@ function bindControls() {
 function setupEmbedModeHeight() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('embed') !== '1') return;
+
     document.body.classList.add('embed-mode');
     const root = $('playApp');
     const send = () => {
@@ -262,6 +300,7 @@ function setupEmbedModeHeight() {
         const origin = window.PLAY_CONFIG.parentOrigin || '*';
         window.parent.postMessage({ type: 'cards-embed-height', height: h }, origin);
     };
+
     const ro = new ResizeObserver(() => setTimeout(send, 120));
     ro.observe(root);
     window.addEventListener('load', send);
