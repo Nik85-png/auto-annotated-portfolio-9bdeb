@@ -91,12 +91,26 @@ async function ensureSessionStarted() {
 function drawBoard() {
     const root = $('board');
     root.innerHTML = '';
-    root.innerHTML += '<div class="cell head"></div>';
-    for (let c = 0; c < 8; c++) root.innerHTML += `<div class="cell head">${c}</div>`;
+    const frag = document.createDocumentFragment();
+
+    const corner = document.createElement('div');
+    corner.className = 'cell head';
+    frag.appendChild(corner);
+
+    for (let c = 0; c < 8; c++) {
+        const head = document.createElement('div');
+        head.className = 'cell head';
+        head.textContent = String(c);
+        frag.appendChild(head);
+    }
 
     const map = boardState();
     for (let r = 0; r < 8; r++) {
-        root.innerHTML += `<div class="cell head">${r}</div>`;
+        const rowHead = document.createElement('div');
+        rowHead.className = 'cell head';
+        rowHead.textContent = String(r);
+        frag.appendChild(rowHead);
+
         for (let c = 0; c < 8; c++) {
             const slot = document.createElement('button');
             slot.type = 'button';
@@ -141,9 +155,10 @@ function drawBoard() {
                     setStatus(err.message);
                 }
             };
-            root.appendChild(slot);
+            frag.appendChild(slot);
         }
     }
+    root.appendChild(frag);
 }
 
 async function startSession() {
