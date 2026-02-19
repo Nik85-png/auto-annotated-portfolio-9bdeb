@@ -205,6 +205,158 @@ def _device_type(ua: str):
     return "mobile" if any(k in ua_l for k in ["android", "iphone", "mobile"]) else "desktop"
 
 
+def _trial_features(trial):
+    moves = trial.get("moves") or []
+    move_count = int(trial.get("move_count") or len(moves) or 0)
+    messiness = float(trial.get("messiness_score") or _messiness_from_moves(moves))
+    slope = float(trial.get("organization_deterioration_rate") or _deterioration_slope(moves))
+    blank_count = int(trial.get("blank_card_count") or sum(1 for m in moves if _is_blank(m)))
+    return {
+        "participant": str(trial.get("participant") or "N/A"),
+        "outcome": str(trial.get("outcome") or "unknown"),
+        "condition": str(trial.get("condition") or "N/A"),
+        "move_count": move_count,
+        "messiness_score": messiness,
+        "organization_deterioration_rate": slope,
+        "blank_cards_used": blank_count,
+    }
+
+
+def _feature_bounds(features):
+    if not features:
+        return {
+            "move_count": (0.0, 1.0),
+            "messiness_score": (0.0, 1.0),
+            "organization_deterioration_rate": (0.0, 1.0),
+            "blank_cards_used": (0.0, 1.0),
+        }
+
+    def bounds(key):
+        vals = [float(f.get(key, 0.0)) for f in features]
+        return (min(vals), max(vals))
+
+    return {
+        "move_count": bounds("move_count"),
+        "messiness_score": bounds("messiness_score"),
+        "organization_deterioration_rate": bounds("organization_deterioration_rate"),
+        "blank_cards_used": bounds("blank_cards_used"),
+    }
+
+
+def _norm(value, low, high):
+    if high <= low:
+        return 0.0
+    return (float(value) - float(low)) / (float(high) - float(low))
+
+
+def _distance(a, b, bounds):
+    a_move = _norm(a["move_count"], *bounds["move_count"])
+    b_move = _norm(b["move_count"], *bounds["move_count"])
+    a_mess = _norm(a["messiness_score"], *bounds["messiness_score"])
+    b_mess = _norm(b["messiness_score"], *bounds["messiness_score"])
+    a_slope = _norm(a["organization_deterioration_rate"], *bounds["organization_deterioration_rate"])
+    b_slope = _norm(b["organization_deterioration_rate"], *bounds["organization_deterioration_rate"])
+    a_blank = _norm(a["blank_cards_used"], *bounds["blank_cards_used"])
+    b_blank = _norm(b["blank_cards_used"], *bounds["blank_cards_used"])
+    return ((a_move - b_move) ** 2 + (a_mess - b_mess) ** 2 + (a_slope - b_slope) ** 2 + (a_blank - b_blank) ** 2) ** 0.5
+
+
+def _percentile_context(feature, baseline_features):
+    baseline_moves = [max(1, int(f["move_count"])) for f in baseline_features] or [1]
+    baseline_mess = [float(f["messiness_score"]) for f in baseline_features] or [0.0]
+    baseline_blank = [int(f["blank_cards_used"]) for f in baseline_features] or [0]
+    baseline_eff = [1.0 / m for m in baseline_moves]
+    eff = 1.0 / max(1, int(feature["move_count"]))
+    return {
+        "messiness": _percentile(float(feature["messiness_score"]), baseline_mess, reverse=True),
+        "efficiency": _percentile(eff, baseline_eff, reverse=False),
+        "blank_usage": _percentile(int(feature["blank_cards_used"]), baseline_blank, reverse=False),
+    }
+
+
+def _performance_score(percentiles):
+    return round(0.6 * float(percentiles.get("messiness", 50.0)) + 0.4 * float(percentiles.get("efficiency", 50.0)), 2)
+
+
+def _predict_outcome(user_feature, baseline_features):
+    if not baseline_features:
+        return {"predicted_outcome": "unknown", "confidence": 0.0}
+
+    bounds = _feature_bounds(baseline_features + [user_feature])
+    ranked = sorted(
+        baseline_features,
+        key=lambda f: _distance(user_feature, f, bounds),
+    )
+    k = min(7, len(ranked))
+    neighbors = ranked[:k]
+    success_votes = sum(1 for n in neighbors if n.get("outcome") == "success")
+    success_prob = (success_votes / k) if k else 0.0
+    predicted = "success" if success_prob >= 0.5 else "fail"
+    confidence = round(abs(success_prob - 0.5) * 2, 3)
+    return {
+        "predicted_outcome": predicted,
+        "confidence": confidence,
+        "success_probability": round(success_prob, 3),
+    }
+
+
+def _build_trial_comparisons(user_feature, baseline_features):
+    if not baseline_features:
+        return {"peer_rank": {"rank": 1, "total": 1, "percentile": 100.0}, "nearest_trials": [], "better_trials": []}
+
+    bounds = _feature_bounds(baseline_features + [user_feature])
+    user_pct = _percentile_context(user_feature, baseline_features)
+    user_score = _performance_score(user_pct)
+
+    enriched = []
+    for f in baseline_features:
+        pct = _percentile_context(f, baseline_features)
+        score = _performance_score(pct)
+        enriched.append(
+            {
+                **f,
+                "distance": round(_distance(user_feature, f, bounds), 4),
+                "performance_score": score,
+                "percentiles": pct,
+            }
+        )
+
+    sorted_by_score = sorted(enriched, key=lambda x: x["performance_score"], reverse=True)
+    better = [t for t in sorted_by_score if t["performance_score"] > user_score][:10]
+    nearest = sorted(enriched, key=lambda x: x["distance"])[:5]
+    rank = sum(1 for t in sorted_by_score if t["performance_score"] > user_score) + 1
+    total = len(sorted_by_score) + 1
+    percentile = round(((total - rank + 1) / total) * 100.0, 1)
+
+    return {
+        "user_performance_score": user_score,
+        "peer_rank": {"rank": rank, "total": total, "percentile": percentile},
+        "nearest_trials": [
+            {
+                "participant": t["participant"],
+                "outcome": t["outcome"],
+                "move_count": t["move_count"],
+                "messiness_score": round(float(t["messiness_score"]), 3),
+                "condition": t["condition"],
+                "distance": t["distance"],
+                "performance_score": t["performance_score"],
+            }
+            for t in nearest
+        ],
+        "better_trials": [
+            {
+                "participant": t["participant"],
+                "outcome": t["outcome"],
+                "move_count": t["move_count"],
+                "messiness_score": round(float(t["messiness_score"]), 3),
+                "condition": t["condition"],
+                "performance_score": t["performance_score"],
+            }
+            for t in better
+        ],
+    }
+
+
 def _require_playground():
     if not ENABLE_PLAYGROUND:
         return _json_response({"error": "Playground disabled"}, no_store=True), 404
@@ -381,16 +533,25 @@ def api_play_complete(session_id):
 
     condition = session["condition"]
     baseline_trials = _all_trials_for_condition(condition)
-    baseline_moves = [len((t.get("moves") or [])) for t in baseline_trials] or [1]
-    baseline_messiness = [float(t.get("messiness_score") or _messiness_from_moves(t.get("moves") or [])) for t in baseline_trials] or [0.0]
-    baseline_blank = [int(t.get("blank_card_count", 1 if t.get("has_blank_cards") else 0)) for t in baseline_trials] or [0]
+    baseline_features = [_trial_features(t) for t in baseline_trials]
 
     move_count = len(moves)
     messiness = _messiness_from_moves(moves)
     slope = _deterioration_slope(moves)
     blank_count = sum(1 for m in moves if _is_blank(m))
-    efficiency = 1.0 / max(move_count, 1)
-    baseline_efficiency = [1.0 / max(v, 1) for v in baseline_moves]
+    current_feature = {
+        "participant": "YOU",
+        "outcome": "unknown",
+        "condition": condition,
+        "move_count": move_count,
+        "messiness_score": messiness,
+        "organization_deterioration_rate": slope,
+        "blank_cards_used": blank_count,
+    }
+    percentiles = _percentile_context(current_feature, baseline_features)
+    score = _performance_score(percentiles)
+    outcome_prediction = _predict_outcome(current_feature, baseline_features)
+    comparisons = _build_trial_comparisons(current_feature, baseline_features)
 
     result = {
         "move_count": move_count,
@@ -398,11 +559,14 @@ def api_play_complete(session_id):
         "organization_deterioration_rate": round(slope, 4),
         "blank_cards_used": blank_count,
         "condition": condition,
-        "condition_matched_percentile": {
-            "messiness": _percentile(messiness, baseline_messiness, reverse=True),
-            "efficiency": _percentile(efficiency, baseline_efficiency, reverse=False),
-            "blank_usage": _percentile(blank_count, baseline_blank, reverse=False),
-        },
+        "condition_matched_percentile": percentiles,
+        "performance_score": score,
+        "trial_outcome": outcome_prediction["predicted_outcome"],
+        "outcome_confidence": outcome_prediction["confidence"],
+        "success_probability": outcome_prediction["success_probability"],
+        "peer_rank": comparisons["peer_rank"],
+        "nearest_trials": comparisons["nearest_trials"],
+        "better_trials": comparisons["better_trials"],
         "insight_label": _insight_label(move_count, messiness, slope, blank_count),
     }
 
@@ -433,6 +597,66 @@ def api_play_result(session_id):
     if row["status"] != "completed":
         return _json_response({"error": "Session not completed"}, no_store=True), 409
     return _json_response({"session_id": session_id, "result": json.loads(row["result_json"] or "{}")}, no_store=True)
+
+
+@app.route("/api/play/session/<session_id>/compare-participant/<participant_id>")
+def api_play_compare_participant(session_id, participant_id):
+    blocked = _require_playground()
+    if blocked:
+        return blocked
+
+    conn = db_conn()
+    cur = conn.cursor()
+    cur.execute("SELECT result_json, condition, status FROM play_sessions WHERE session_id = ?", (session_id,))
+    row = cur.fetchone()
+    conn.close()
+    if not row:
+        return _json_response({"error": "Session not found"}, no_store=True), 404
+    if row["status"] != "completed":
+        return _json_response({"error": "Session not completed"}, no_store=True), 409
+
+    user_result = json.loads(row["result_json"] or "{}")
+    condition = user_result.get("condition") or row["condition"]
+    baseline_features = [_trial_features(t) for t in _all_trials_for_condition(condition)]
+    target = [f for f in baseline_features if str(f.get("participant")) == str(participant_id)]
+    if not target:
+        return _json_response({"error": "Participant not found in this condition"}, no_store=True), 404
+
+    user_feature = {
+        "participant": "YOU",
+        "outcome": user_result.get("trial_outcome", "unknown"),
+        "condition": condition,
+        "move_count": int(user_result.get("move_count", 0)),
+        "messiness_score": float(user_result.get("messiness_score", 0.0)),
+        "organization_deterioration_rate": float(user_result.get("organization_deterioration_rate", 0.0)),
+        "blank_cards_used": int(user_result.get("blank_cards_used", 0)),
+    }
+
+    def avg(key):
+        vals = [float(t.get(key, 0.0)) for t in target]
+        return (sum(vals) / len(vals)) if vals else 0.0
+
+    participant_summary = {
+        "participant": str(participant_id),
+        "condition": condition,
+        "trial_count": len(target),
+        "success_rate": round(100.0 * sum(1 for t in target if t.get("outcome") == "success") / len(target), 1),
+        "avg_move_count": round(avg("move_count"), 2),
+        "avg_messiness_score": round(avg("messiness_score"), 3),
+        "avg_deterioration_rate": round(avg("organization_deterioration_rate"), 4),
+        "avg_blank_cards_used": round(avg("blank_cards_used"), 2),
+    }
+
+    compare = {
+        "move_count_delta": round(user_feature["move_count"] - participant_summary["avg_move_count"], 2),
+        "messiness_delta": round(user_feature["messiness_score"] - participant_summary["avg_messiness_score"], 3),
+        "deterioration_delta": round(
+            user_feature["organization_deterioration_rate"] - participant_summary["avg_deterioration_rate"], 4
+        ),
+        "blank_cards_delta": round(user_feature["blank_cards_used"] - participant_summary["avg_blank_cards_used"], 2),
+    }
+
+    return _json_response({"participant_summary": participant_summary, "comparison": compare}, no_store=True)
 
 
 @app.route("/api/play/history")

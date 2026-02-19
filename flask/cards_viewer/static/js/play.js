@@ -218,20 +218,88 @@ function renderResults() {
     const r = state.result;
     if (!r) {
         $('resultsContent').innerHTML = '<p>Complete a trial to see analysis.</p>';
+        if ($('participantCompareContent')) {
+            $('participantCompareContent').textContent = 'Enter a participant number from this condition.';
+        }
         return;
     }
 
+    const outcomeText = r.trial_outcome === 'success' ? 'SUCCESS' : r.trial_outcome === 'fail' ? 'FAILURE' : 'UNKNOWN';
+    const outcomeClass = r.trial_outcome === 'success' ? 'outcome-success' : r.trial_outcome === 'fail' ? 'outcome-fail' : '';
+    const nearest = Array.isArray(r.nearest_trials) ? r.nearest_trials : [];
+    const better = Array.isArray(r.better_trials) ? r.better_trials : [];
+    const peerRank = r.peer_rank || { rank: '-', total: '-', percentile: '-' };
+
+    const nearestHtml = nearest.length
+        ? nearest
+            .map(
+                (t) =>
+                    `<li>P${t.participant} | ${t.outcome} | ${t.move_count} moves | messiness ${t.messiness_score} | score ${t.performance_score}</li>`
+            )
+            .join('')
+        : '<li>No nearby baseline trials found.</li>';
+
+    const betterHtml = better.length
+        ? better
+            .slice(0, 8)
+            .map(
+                (t) =>
+                    `<li>P${t.participant} | ${t.outcome} | ${t.move_count} moves | messiness ${t.messiness_score} | score ${t.performance_score}</li>`
+            )
+            .join('')
+        : '<li>No better baseline trials for this condition.</li>';
+
     $('resultsContent').innerHTML = `
+        <p><strong>Trial Outcome:</strong> <span class="${outcomeClass}">${outcomeText}</span> (${Math.round((r.success_probability || 0) * 100)}% success likelihood, confidence ${Math.round((r.outcome_confidence || 0) * 100)}%)</p>
         <p><strong>Condition:</strong> ${r.condition}</p>
         <p><strong>Move Count:</strong> ${r.move_count}</p>
         <p><strong>Messiness Score:</strong> ${r.messiness_score}</p>
         <p><strong>Deterioration Rate:</strong> ${r.organization_deterioration_rate}</p>
         <p><strong>Blank Cards Used:</strong> ${r.blank_cards_used}</p>
+        <p><strong>Performance Score:</strong> ${r.performance_score}</p>
         <p><strong>Insight:</strong> ${r.insight_label}</p>
+        <p><strong>Peer Rank (condition-matched):</strong> #${peerRank.rank} / ${peerRank.total} (${peerRank.percentile}th percentile)</p>
         <p><strong>Percentiles (condition-matched):</strong></p>
         <p>Messiness: ${r.condition_matched_percentile.messiness}%</p>
         <p>Efficiency: ${r.condition_matched_percentile.efficiency}%</p>
         <p>Blank Usage: ${r.condition_matched_percentile.blank_usage}%</p>
+        <p><strong>Closest Participant Trials:</strong></p>
+        <ul>${nearestHtml}</ul>
+        <p><strong>Better Trials You Can Study:</strong></p>
+        <ul>${betterHtml}</ul>
+    `;
+}
+
+async function compareParticipant() {
+    const output = $('participantCompareContent');
+    if (!state.sessionId || !state.result) {
+        output.textContent = 'Complete your trial first.';
+        return;
+    }
+
+    const participantId = ($('participantCompareInput')?.value || '').trim();
+    if (!participantId) {
+        output.textContent = 'Enter a participant number (example: 189).';
+        return;
+    }
+
+    const res = await fetch(`/api/play/session/${encodeURIComponent(state.sessionId)}/compare-participant/${encodeURIComponent(participantId)}`, {
+        cache: 'no-store'
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+        output.textContent = data.error || 'Could not compare with this participant.';
+        return;
+    }
+
+    const p = data.participant_summary || {};
+    const c = data.comparison || {};
+    output.innerHTML = `
+        <p><strong>Participant P${p.participant}</strong> (${p.condition})</p>
+        <p>Trials: ${p.trial_count} | Success Rate: ${p.success_rate}%</p>
+        <p>Avg Moves: ${p.avg_move_count} | Avg Messiness: ${p.avg_messiness_score} | Avg Deterioration: ${p.avg_deterioration_rate}</p>
+        <p><strong>Your Delta vs P${p.participant}:</strong></p>
+        <p>Moves: ${c.move_count_delta} | Messiness: ${c.messiness_delta} | Deterioration: ${c.deterioration_delta} | Blank Cards: ${c.blank_cards_delta}</p>
     `;
 }
 
@@ -301,6 +369,12 @@ function bindControls() {
 
     if (window.PLAY_CONFIG.enableGif) {
         $('exportGifBtn').onclick = () => exportGif();
+    }
+
+    if ($('participantCompareBtn')) {
+        $('participantCompareBtn').onclick = () => compareParticipant().catch((e) => {
+            $('participantCompareContent').textContent = e.message || 'Compare failed.';
+        });
     }
 }
 

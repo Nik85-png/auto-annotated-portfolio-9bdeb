@@ -60,6 +60,14 @@
             <div class="card">
                 <h3>Instant Analysis</h3>
                 <div id="resultsContent" class="muted">Complete a trial to see analysis.</div>
+                <div class="participant-compare">
+                    <label for="participantCompareInput">Compare With Participant Number</label>
+                    <div class="inline-actions">
+                        <input id="participantCompareInput" type="text" placeholder="e.g. 189" />
+                        <button id="participantCompareBtn" class="primary">Compare</button>
+                    </div>
+                    <div id="participantCompareContent" class="muted">Enter a participant number from this condition.</div>
+                </div>
                 {% if enable_gif %}
                 <button id="exportGifBtn" class="primary">Export Replay GIF</button>
                 {% endif %}
