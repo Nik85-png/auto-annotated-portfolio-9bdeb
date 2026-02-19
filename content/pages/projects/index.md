@@ -50,7 +50,7 @@ topSections:
 bottomSections:
   - type: ContactSection
     backgroundSize: full
-    title: Working on something data driven?
+    title: Let's build something insightful together
     colors: colors-f
     form:
       type: FormBlock
@@ -81,10 +81,10 @@ bottomSections:
           name: message
           label: Message
           hideLabel: true
-          placeholder: Share your dataset or project context
+          placeholder: Share your role, dataset, or project context
           isRequired: true
           width: full
-      submitLabel: Send message
+      submitLabel: Start the conversation
       styles:
         self:
           textAlign: center

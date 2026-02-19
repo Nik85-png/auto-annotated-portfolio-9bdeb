@@ -94,7 +94,7 @@ sections:
   - type: ContactSection
     colors: colors-f
     backgroundSize: full
-    title: Lets build something insightful
+    title: Let's build something insightful together
     form:
       type: FormBlock
       elementId: contact-home
@@ -124,10 +124,10 @@ sections:
           name: message
           label: Message
           hideLabel: true
-          placeholder: Tell me about your project or analysis goal
+          placeholder: Tell me about your role, team, project, or analysis goal
           isRequired: true
           width: full
-      submitLabel: Send message
+      submitLabel: Start the conversation
       styles:
         self:
           textAlign: center

@@ -270,7 +270,7 @@ sections:
         borderStyle: solid
   - type: ContactSection
     backgroundSize: full
-    title: Lets build something insightful
+    title: Let's build something insightful together
     colors: colors-f
     form:
       type: FormBlock
@@ -294,10 +294,10 @@ sections:
           name: message
           label: Message
           hideLabel: true
-          placeholder: Tell me what you are building
+          placeholder: Tell me about your opportunity, team, or project goals
           isRequired: true
           width: full
-      submitLabel: Send
+      submitLabel: Start the conversation
       styles:
         self:
           textAlign: center
