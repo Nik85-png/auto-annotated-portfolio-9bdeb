@@ -171,6 +171,3 @@ This suggests:
 
 - Interactive page: `/cards-analysis/index.html`
 - JSON data source: `public/data/card_analysis_data.json`
-- Optional animation asset path (if you add MP4 later): `public/videos/cards-animation.mp4`
-
-Next step: integrate your Colab notebook outputs into this page (model metrics, additional graphs, and detailed method notes).
