@@ -1,0 +1,212 @@
+{
+  "meta": {
+    "title": "Predicting Heart Failure Outcomes with Machine Learning",
+    "subtitle": "An MSc Research Journal",
+    "student": "Nikunj Prajapati",
+    "id": "24052351",
+    "course": "MSc Data Analytics",
+    "university": "University",
+    "started": "2025-02-20",
+    "target": "2025-03-20",
+    "dataset": "PhysioNet — Hospitalised Heart Failure Patients",
+    "n_patients": 2008,
+    "n_variables": 166,
+    "github": "https://github.com/yourusername/hf-risk",
+    "tool_url": "",
+    "tagline": "Can a machine learning model predict which heart failure patients are most at risk — before they leave the hospital?"
+  },
+
+  "stats": [
+    { "label": "Patients in Dataset", "value": "2,008", "icon": "🏥" },
+    { "label": "Clinical Variables", "value": "166", "icon": "🧪" },
+    { "label": "Outcome Timepoints", "value": "4", "icon": "⏱️" },
+    { "label": "Days of Work", "value": "30", "icon": "📅" }
+  ],
+
+  "phases": [
+    {
+      "id": "phase-1",
+      "number": "01",
+      "title": "Foundations & Literature Review",
+      "subtitle": "Understanding the clinical world before touching the data",
+      "color": "#c0392b",
+      "status": "complete",
+      "date_range": "Feb 20 – Feb 27",
+      "tasks": [
+        {
+          "id": "t1",
+          "title": "Clinical Foundations — Understanding Heart Failure",
+          "status": "complete",
+          "hours": 4,
+          "summary": "Learned the core clinical concepts: what heart failure is, how NYHA classification works, why BNP is the key biomarker, and what LVEF tells a cardiologist about pump function."
+        },
+        {
+          "id": "t2",
+          "title": "Literature Review — 8 Core Papers",
+          "status": "complete",
+          "hours": 6,
+          "summary": "Read and annotated 8 key papers covering ML in heart failure prediction, survival analysis, and clinical explainability. Identified the gap: no existing study combines multi-horizon prediction with survival modelling and SHAP on this dataset."
+        },
+        {
+          "id": "t3",
+          "title": "Gap Analysis & Literature Structure",
+          "status": "complete",
+          "hours": 3,
+          "summary": "Identified 5 limitations in existing literature. Structured the literature review into 4 sections: clinical context, traditional scoring methods, ML approaches, and the research gap this project addresses."
+        },
+        {
+          "id": "t4",
+          "title": "Python Environment Setup",
+          "status": "complete",
+          "hours": 1.5,
+          "summary": "Installed all required libraries: pandas, scikit-learn, XGBoost, LightGBM, SHAP, lifelines, missingno. Created project folder structure."
+        }
+      ],
+      "journal": {
+        "written": true,
+        "date": "2025-02-27",
+        "entry": "The first week was entirely reading — no code, no data. It felt slow at first but it was absolutely necessary. I didn't realise how much clinical context matters until I looked at a variable called 'tricuspid valve return velocity' and had no idea what it measured or why it matters. Now I understand that it's used to estimate pulmonary artery pressure — a key marker of right heart strain in heart failure.\n\nThe most surprising thing I learned: 30-day readmission is considered more important than 30-day mortality in cardiology. Hospitals are judged on it. Preventing a patient from coming back to hospital within a month is arguably harder than keeping them alive in the initial admission — and my dataset captures both.\n\nThe literature gap became very clear: every paper I read either predicted a single outcome, used a dataset of under 1,000 patients, or didn't explain the model's reasoning. Mine does all three differently.",
+        "key_papers": [
+          {
+            "citation": "Zhang et al. (2021) — Scientific Data",
+            "finding": "Describes our exact dataset. 2,008 patients, 166 variables, Chinese hospital. Authors note the dataset's richness but provide no predictive modelling — that's our work.",
+            "relevance": "Primary data source"
+          },
+          {
+            "citation": "Chicco & Jurman (2020) — BMC Medical Informatics",
+            "finding": "Showed that just 2 variables (creatinine and LVEF) can predict heart failure survival with reasonable accuracy. Benchmark AUC: 0.73.",
+            "relevance": "Baseline to beat — we use 166 variables"
+          },
+          {
+            "citation": "Lundberg et al. (2020) — Nature Machine Intelligence",
+            "finding": "Introduced SHAP values for explaining tree-based models. Now standard in clinical ML for making predictions interpretable to clinicians.",
+            "relevance": "Our explainability method"
+          }
+        ]
+      }
+    },
+
+    {
+      "id": "phase-2",
+      "number": "02",
+      "title": "Exploratory Data Analysis",
+      "subtitle": "Getting to know 2,008 patients one variable at a time",
+      "color": "#b8860b",
+      "status": "in-progress",
+      "date_range": "Feb 28 – Mar 4",
+      "tasks": [
+        {
+          "id": "t5",
+          "title": "Dataset Structure & Missingness Analysis",
+          "status": "complete",
+          "hours": 3,
+          "summary": "Mapped missingness across all 166 variables. Found cholinesterase 100% missing (dropped). LVEF missing in 68% — requires careful imputation strategy. 121 variables have under 30% missing data."
+        },
+        {
+          "id": "t6",
+          "title": "Outcome Variable Definition & Class Balance",
+          "status": "complete",
+          "hours": 2,
+          "summary": "Defined 4 prediction targets. 6-month mortality: 2.8% positive rate (severe imbalance). 6-month readmission: 38.5% (more balanced). Will use SMOTE and class weighting strategies."
+        },
+        {
+          "id": "t7",
+          "title": "Clinical Feature Visualisations",
+          "status": "in-progress",
+          "hours": 4,
+          "summary": "Producing distribution plots, BNP by outcome violin plots, NYHA vs mortality bar charts, Kaplan-Meier survival curves by NYHA class."
+        },
+        {
+          "id": "t8",
+          "title": "Table 1 — Patient Characteristics Summary",
+          "status": "not-started",
+          "hours": 1.5,
+          "summary": ""
+        }
+      ],
+      "journal": {
+        "written": false,
+        "date": "",
+        "entry": "",
+        "key_papers": []
+      }
+    },
+
+    {
+      "id": "phase-3",
+      "number": "03",
+      "title": "Data Preprocessing & Feature Engineering",
+      "subtitle": "Preparing the data the right way — not the easy way",
+      "color": "#2c5f8a",
+      "status": "not-started",
+      "date_range": "Mar 4 – Mar 8",
+      "tasks": [
+        { "id": "t9", "title": "MICE Missing Data Imputation", "status": "not-started", "hours": 3, "summary": "" },
+        { "id": "t10", "title": "Feature Engineering (BNP log-transform, clinical composite flags)", "status": "not-started", "hours": 3, "summary": "" },
+        { "id": "t11", "title": "Train/Test Split & Cross-Validation Strategy", "status": "not-started", "hours": 1, "summary": "" },
+        { "id": "t12", "title": "Class Imbalance Handling (SMOTE + class weights)", "status": "not-started", "hours": 2, "summary": "" }
+      ],
+      "journal": { "written": false, "date": "", "entry": "", "key_papers": [] }
+    },
+
+    {
+      "id": "phase-4",
+      "number": "04",
+      "title": "Machine Learning Modelling",
+      "subtitle": "Training, comparing, and rigorously evaluating five models",
+      "color": "#6b3fa0",
+      "status": "not-started",
+      "date_range": "Mar 9 – Mar 14",
+      "tasks": [
+        { "id": "t13", "title": "Baseline Models — Logistic Regression & Decision Tree", "status": "not-started", "hours": 2, "summary": "" },
+        { "id": "t14", "title": "Advanced Models — Random Forest, XGBoost, LightGBM", "status": "not-started", "hours": 4, "summary": "" },
+        { "id": "t15", "title": "Survival Analysis — Cox Proportional Hazards", "status": "not-started", "hours": 3, "summary": "" },
+        { "id": "t16", "title": "Random Survival Forest", "status": "not-started", "hours": 3, "summary": "" },
+        { "id": "t17", "title": "Model Comparison Table & ROC Curves", "status": "not-started", "hours": 2, "summary": "" }
+      ],
+      "journal": { "written": false, "date": "", "entry": "", "key_papers": [] }
+    },
+
+    {
+      "id": "phase-5",
+      "number": "05",
+      "title": "Explainability & Clinical Tool",
+      "subtitle": "Making the model speak in a language clinicians understand",
+      "color": "#2a7a6f",
+      "status": "not-started",
+      "date_range": "Mar 14 – Mar 18",
+      "tasks": [
+        { "id": "t18", "title": "SHAP Global Feature Importance Analysis", "status": "not-started", "hours": 3, "summary": "" },
+        { "id": "t19", "title": "Patient-Level SHAP Waterfall Explanations", "status": "not-started", "hours": 2, "summary": "" },
+        { "id": "t20", "title": "Streamlit Risk Prediction Tool (connected to real model)", "status": "not-started", "hours": 4, "summary": "" },
+        { "id": "t21", "title": "Simplified Clinical Risk Scorecard (1-page)", "status": "not-started", "hours": 2, "summary": "" }
+      ],
+      "journal": { "written": false, "date": "", "entry": "", "key_papers": [] }
+    },
+
+    {
+      "id": "phase-6",
+      "number": "06",
+      "title": "Outreach & Dissertation",
+      "subtitle": "Taking the work out of the notebook and into the real world",
+      "color": "#2d6a4f",
+      "status": "not-started",
+      "date_range": "Mar 18 – Mar 20",
+      "tasks": [
+        { "id": "t22", "title": "Clinician Outreach — Contact 5–8 cardiologists/HF nurses", "status": "not-started", "hours": 2, "summary": "" },
+        { "id": "t23", "title": "Dissertation First Draft — Methods & Results chapters", "status": "not-started", "hours": 8, "summary": "" },
+        { "id": "t24", "title": "Clinical Expert Feedback Session", "status": "not-started", "hours": 2, "summary": "" }
+      ],
+      "journal": { "written": false, "date": "", "entry": "", "key_papers": [] }
+    }
+  ],
+
+  "findings": {
+    "published": false,
+    "best_model": "",
+    "best_auc": null,
+    "top_predictors": [],
+    "tool_url": "",
+    "key_insight": ""
+  }
+}

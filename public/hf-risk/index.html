@@ -1,0 +1,241 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HF-RISK | Live Research Journal</title>
+  <meta name="description" content="Live GitHub-powered MSc project journal" />
+  <style>
+    :root {
+      --bg: #0d1b2a;
+      --panel: #13263b;
+      --panel-2: #1b324c;
+      --text: #e9f1f8;
+      --muted: #a7bbcc;
+      --border: #2f4a66;
+      --accent: #2a9d8f;
+      --accent-2: #f4a261;
+      --good: #43aa8b;
+      --warn: #e9c46a;
+      --off: #7f93a7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: "Azeret Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background: linear-gradient(180deg, #0d1b2a 0%, #10253a 45%, #0f1f31 100%);
+    }
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
+    .hero {
+      background: radial-gradient(900px 300px at 20% -20%, rgba(42,157,143,.22), transparent 55%),
+                  radial-gradient(900px 300px at 100% 0%, rgba(244,162,97,.18), transparent 55%),
+                  var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+    }
+    h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 38px); }
+    .sub { color: var(--muted); line-height: 1.6; }
+    .stats { margin-top: 16px; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); }
+    .stat { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+    .stat .label { color: var(--muted); font-size: 12px; }
+    .stat .value { font-size: 26px; margin-top: 4px; }
+    .progress { margin-top: 14px; }
+    .track { height: 10px; background: #213a53; border-radius: 999px; overflow: hidden; border: 1px solid var(--border); }
+    .fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); width: 0; transition: width .7s ease; }
+    .pct { margin-top: 6px; color: var(--muted); font-size: 12px; }
+    section { margin-top: 18px; }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+    .card h2 { margin: 0 0 10px; font-size: 20px; }
+    .phase { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--panel-2); margin-top: 10px; }
+    .phase-head { display: flex; gap: 10px; justify-content: space-between; align-items: center; padding: 12px; cursor: pointer; }
+    .phase-title { font-size: 15px; }
+    .badge { font-size: 11px; padding: 4px 8px; border-radius: 999px; border: 1px solid transparent; }
+    .complete { color: var(--good); border-color: rgba(67,170,139,.5); background: rgba(67,170,139,.12); }
+    .in-progress { color: var(--warn); border-color: rgba(233,196,106,.5); background: rgba(233,196,106,.12); }
+    .not-started { color: var(--off); border-color: rgba(127,147,167,.5); background: rgba(127,147,167,.12); }
+    .phase-body { display: none; border-top: 1px solid var(--border); padding: 12px; }
+    .phase-body.open { display: block; }
+    .task { padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; background: #142c43; }
+    .task-row { display: flex; justify-content: space-between; gap: 10px; }
+    .task small { color: var(--muted); }
+    .journal { margin-top: 10px; padding: 10px; border-radius: 10px; border: 1px dashed var(--border); background: #10283f; white-space: pre-wrap; line-height: 1.6; color: #c8d7e5; }
+    .find-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); }
+    .note { color: var(--muted); font-size: 13px; }
+    .muted { color: var(--muted); }
+    .footer { margin-top: 20px; color: var(--muted); font-size: 12px; }
+    code { color: #f8dca1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <h1 id="title">HF-RISK Live Journal</h1>
+      <div class="sub" id="tagline">Loading project data...</div>
+      <div class="stats" id="stats"></div>
+      <div class="progress">
+        <div class="track"><div class="fill" id="progress-fill"></div></div>
+        <div class="pct" id="progress-text"></div>
+      </div>
+      <div class="note" id="source-note" style="margin-top:10px"></div>
+    </div>
+
+    <section class="card">
+      <h2>Project Timeline</h2>
+      <div id="phases"></div>
+    </section>
+
+    <section class="card">
+      <h2>Findings</h2>
+      <div id="findings"></div>
+    </section>
+
+    <section class="card">
+      <h2>How to Use</h2>
+      <div class="note">Default source: <code>./project-data.json</code>. To load from GitHub raw URL, open this page with <code>?dataUrl=https://raw.githubusercontent.com/USERNAME/REPO/main/project-data.json</code>.</div>
+    </section>
+
+    <div class="footer" id="footer"></div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const DEFAULT_DATA_URL = './project-data.json';
+    const DATA_URL = params.get('dataUrl') || DEFAULT_DATA_URL;
+
+    const statusClass = {
+      'complete': 'complete',
+      'in-progress': 'in-progress',
+      'not-started': 'not-started'
+    };
+
+    function calcProgress(phases) {
+      let total = 0;
+      let done = 0;
+      (phases || []).forEach((p) => {
+        (p.tasks || []).forEach((t) => {
+          total += 1;
+          if (t.status === 'complete') done += 1;
+          if (t.status === 'in-progress') done += 0.5;
+        });
+      });
+      const pct = total ? Math.round((done / total) * 100) : 0;
+      return { total, done, pct };
+    }
+
+    function phaseProgress(phase) {
+      const tasks = phase.tasks || [];
+      if (!tasks.length) return 0;
+      let done = 0;
+      tasks.forEach((t) => {
+        if (t.status === 'complete') done += 1;
+        if (t.status === 'in-progress') done += 0.5;
+      });
+      return Math.round((done / tasks.length) * 100);
+    }
+
+    function fmt(value) {
+      if (value === null || value === undefined || value === '') return 'N/A';
+      return value;
+    }
+
+    function render(data) {
+      const meta = data.meta || {};
+      const stats = data.stats || [];
+      const phases = data.phases || [];
+      const findings = data.findings || {};
+
+      document.getElementById('title').textContent = meta.title || 'HF-RISK Live Journal';
+      document.getElementById('tagline').textContent = meta.tagline || 'Research progress and journal entries';
+      document.getElementById('source-note').innerHTML = `Data source: <code>${DATA_URL}</code>`;
+
+      document.getElementById('stats').innerHTML = stats.map((s) => `
+        <div class="stat">
+          <div class="label">${fmt(s.label)}</div>
+          <div class="value">${fmt(s.value)}</div>
+        </div>
+      `).join('');
+
+      const p = calcProgress(phases);
+      document.getElementById('progress-fill').style.width = `${p.pct}%`;
+      document.getElementById('progress-text').textContent = `${p.done}/${p.total} tasks complete (${p.pct}%)`;
+
+      const phasesEl = document.getElementById('phases');
+      phasesEl.innerHTML = phases.map((phase, idx) => {
+        const pct = phaseProgress(phase);
+        const tasksHtml = (phase.tasks || []).map((t) => `
+          <div class="task">
+            <div class="task-row">
+              <strong>${fmt(t.title)}</strong>
+              <small>${fmt(t.hours)}h</small>
+            </div>
+            ${t.summary ? `<small>${t.summary}</small>` : ''}
+          </div>
+        `).join('');
+
+        const journal = phase.journal && phase.journal.written
+          ? `<div class="journal">${fmt(phase.journal.entry)}\n\nDate: ${fmt(phase.journal.date)}</div>`
+          : '<div class="note">Journal entry not published yet.</div>';
+
+        return `
+          <div class="phase">
+            <div class="phase-head" data-phase="${idx}">
+              <div>
+                <div class="phase-title">Phase ${fmt(phase.number)} - ${fmt(phase.title)}</div>
+                <div class="muted">${fmt(phase.subtitle)} | ${fmt(phase.date_range)}</div>
+              </div>
+              <div style="text-align:right">
+                <div class="badge ${statusClass[phase.status] || 'not-started'}">${fmt(phase.status)}</div>
+                <div class="muted" style="font-size:12px;margin-top:4px">${pct}%</div>
+              </div>
+            </div>
+            <div class="phase-body ${phase.status !== 'not-started' ? 'open' : ''}">
+              ${tasksHtml || '<div class="note">No tasks yet.</div>'}
+              ${journal}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.querySelectorAll('.phase-head').forEach((el) => {
+        el.addEventListener('click', () => {
+          const body = el.nextElementSibling;
+          body.classList.toggle('open');
+        });
+      });
+
+      const findingsEl = document.getElementById('findings');
+      if (!findings.published) {
+        findingsEl.innerHTML = '<div class="note">Results are not published yet. This section will update automatically from JSON.</div>';
+      } else {
+        findingsEl.innerHTML = `
+          <div class="find-grid">
+            <div class="stat"><div class="label">Best Model</div><div class="value">${fmt(findings.best_model)}</div></div>
+            <div class="stat"><div class="label">Best AUROC</div><div class="value">${fmt(findings.best_auc)}</div></div>
+            <div class="stat"><div class="label">Tool URL</div><div class="value" style="font-size:14px">${findings.tool_url ? `<a href="${findings.tool_url}" target="_blank" style="color:#98e2d7">Open</a>` : 'N/A'}</div></div>
+          </div>
+          <div class="journal" style="margin-top:10px">${fmt(findings.key_insight)}</div>
+        `;
+      }
+
+      document.getElementById('footer').textContent = `${fmt(meta.student)} | ${fmt(meta.course)} | Started ${fmt(meta.started)} | Target ${fmt(meta.target)}`;
+    }
+
+    async function init() {
+      try {
+        const cacheBust = (DATA_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
+        const res = await fetch(DATA_URL + cacheBust);
+        if (!res.ok) throw new Error('Failed to load data');
+        const data = await res.json();
+        render(data);
+      } catch (err) {
+        document.getElementById('tagline').textContent = 'Could not load project-data.json';
+        document.getElementById('source-note').innerHTML = `<span style="color:#f4a261">${err.message}</span>`;
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
