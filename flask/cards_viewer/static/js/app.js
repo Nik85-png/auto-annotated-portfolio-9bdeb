@@ -241,17 +241,47 @@ function bindControls() {
 }
 
 function renderCharts() {
+    const trials = getUniqueTrials();
+    const successful = trials.filter((t) => t.outcome === 'success');
+    const failed = trials.filter((t) => t.outcome !== 'success');
+    const conditions = ['KQ', 'KQB', 'KQJ', 'KQJB'];
+
+    const withBlank = trials.filter((t) => (t.blank_card_count || 0) > 0);
+    const withoutBlank = trials.filter((t) => (t.blank_card_count || 0) === 0);
+    const blankSuccessRate = rate(withBlank.filter((t) => t.outcome === 'success').length, withBlank.length);
+    const noBlankSuccessRate = rate(withoutBlank.filter((t) => t.outcome === 'success').length, withoutBlank.length);
+    const successMessinessAvg = avg(successful.map((t) => numeric(t.messiness_score)));
+    const failMessinessAvg = avg(failed.map((t) => numeric(t.messiness_score)));
+
     Plotly.newPlot(
         'summaryChart',
         [
             {
                 x: ['Total', 'Success', 'Failed'],
-                y: [229, 107, 122],
+                y: [trials.length, successful.length, failed.length],
                 type: 'bar',
                 marker: { color: ['#146c94', '#10b981', '#ef4444'] }
             }
         ],
-        { margin: { t: 20, b: 40, l: 40, r: 10 } },
+        chartLayout('Count'),
+        { displayModeBar: false, responsive: true }
+    );
+    Plotly.newPlot(
+        'conditionChart',
+        [
+            {
+                x: conditions,
+                y: conditions.map((condition) => {
+                    const group = trials.filter((t) => t.condition === condition);
+                    return rate(group.filter((t) => t.outcome === 'success').length, group.length);
+                }),
+                type: 'bar',
+                marker: { color: '#2a9d8f' },
+                textposition: 'outside',
+                texttemplate: '%{y:.1f}%'
+            }
+        ],
+        chartLayout('Success Rate (%)', [0, 100]),
         { displayModeBar: false, responsive: true }
     );
     Plotly.newPlot(
@@ -259,12 +289,37 @@ function renderCharts() {
         [
             {
                 x: ['Success', 'Failure'],
-                y: [0.21, 0.34],
+                y: [successMessinessAvg, failMessinessAvg],
                 type: 'bar',
                 marker: { color: ['#10b981', '#ef4444'] }
             }
         ],
-        { margin: { t: 20, b: 40, l: 40, r: 10 } },
+        chartLayout('Messiness Score'),
+        { displayModeBar: false, responsive: true }
+    );
+    Plotly.newPlot(
+        'moveDistChart',
+        [
+            {
+                x: successful.map((t) => numeric(t.move_count)),
+                type: 'histogram',
+                name: 'Success',
+                opacity: 0.65,
+                marker: { color: '#10b981' }
+            },
+            {
+                x: failed.map((t) => numeric(t.move_count)),
+                type: 'histogram',
+                name: 'Failure',
+                opacity: 0.65,
+                marker: { color: '#ef4444' }
+            }
+        ],
+        {
+            ...chartLayout('Trials'),
+            barmode: 'overlay',
+            xaxis: { title: 'Move Count' }
+        },
         { displayModeBar: false, responsive: true }
     );
     Plotly.newPlot(
@@ -272,14 +327,92 @@ function renderCharts() {
         [
             {
                 x: ['With Blank', 'Without Blank'],
-                y: [73.3, 37.3],
+                y: [blankSuccessRate, noBlankSuccessRate],
                 type: 'bar',
-                marker: { color: ['#2a9d8f', '#94a3b8'] }
+                marker: { color: ['#2a9d8f', '#94a3b8'] },
+                textposition: 'outside',
+                texttemplate: '%{y:.1f}%'
             }
         ],
-        { margin: { t: 20, b: 40, l: 40, r: 10 } },
+        chartLayout('Success Rate (%)', [0, 100]),
         { displayModeBar: false, responsive: true }
     );
+    Plotly.newPlot(
+        'messinessBoxChart',
+        [
+            {
+                y: successful.map((t) => numeric(t.messiness_score)),
+                type: 'box',
+                name: 'Success',
+                marker: { color: '#10b981' },
+                boxmean: true
+            },
+            {
+                y: failed.map((t) => numeric(t.messiness_score)),
+                type: 'box',
+                name: 'Failure',
+                marker: { color: '#ef4444' },
+                boxmean: true
+            }
+        ],
+        chartLayout('Messiness Score'),
+        { displayModeBar: false, responsive: true }
+    );
+
+    window.addEventListener('resize', resizeCharts);
+}
+
+function numeric(v) {
+    return typeof v === 'number' && Number.isFinite(v) ? v : Number(v) || 0;
+}
+
+function avg(arr) {
+    if (!arr.length) return 0;
+    return arr.reduce((sum, v) => sum + numeric(v), 0) / arr.length;
+}
+
+function rate(part, total) {
+    if (!total) return 0;
+    return (part / total) * 100;
+}
+
+function chartLayout(yTitle, range = null) {
+    return {
+        margin: { t: 20, b: 45, l: 50, r: 10 },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: '#1f2937' },
+        yaxis: {
+            title: yTitle,
+            range: range || undefined
+        }
+    };
+}
+
+function trialKey(trial) {
+    return [
+        trial.participant || '',
+        trial.condition || '',
+        trial.outcome || '',
+        numeric(trial.move_count ?? (trial.moves || []).length),
+        Number(numeric(trial.messiness_score).toFixed(4))
+    ].join('|');
+}
+
+function getUniqueTrials() {
+    const all = (state.data?.analysis_types || []).flatMap((analysis) => analysis.trials || []);
+    const map = new Map();
+    all.forEach((trial) => {
+        map.set(trialKey(trial), trial);
+    });
+    return Array.from(map.values());
+}
+
+function resizeCharts() {
+    ['summaryChart', 'conditionChart', 'messinessChart', 'moveDistChart', 'blankChart', 'messinessBoxChart'].forEach((id) => {
+        const el = $(id);
+        if (el) Plotly.Plots.resize(el);
+    });
 }
 
 const EMBED_MIN = 520;
