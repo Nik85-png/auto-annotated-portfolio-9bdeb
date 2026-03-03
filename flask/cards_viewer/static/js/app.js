@@ -2,9 +2,9 @@ const analysisDefinitions = {
     1: { title: 'Successful Clean Patterns (Many Moves)', explanation: 'Successful participants with many exploratory moves while keeping structure.' },
     2: { title: 'Failed Messy Patterns (Few Moves)', explanation: 'Failed trials where organization breaks down early.' },
     3: { title: 'All Successful Trials', explanation: 'All success outcomes to compare multiple winning paths.' },
-    4: { title: 'Learning Progression', explanation: 'How organization changes across moves.' },
+    4: { title: 'In-Trial Progression (Early vs Late)', explanation: 'Compares how spatial organization changes from the start to the end of each trial.' },
     5: { title: 'Opening Strategies (First 5 Moves)', explanation: 'First moves that shape final outcomes.' },
-    6: { title: 'Retry Progression (Same Person, Multiple Attempts)', explanation: 'Adaptation over repeated attempts.' },
+    6: { title: 'Retry and Recovery Patterns', explanation: 'Highlights repeated participants when available, otherwise contrasts failed and successful strategies.' },
     7: { title: 'Extreme Cases (Cleanest vs Messiest)', explanation: 'Best and worst spatial organization cases.' },
     8: { title: 'Speed Comparison (Quick vs Slow Solvers)', explanation: 'Efficiency versus exploration in successful runs.' },
     9: { title: 'Card Repetition Patterns', explanation: 'Focused repetition versus broad exploration.' }
@@ -22,6 +22,7 @@ const state = {
 };
 
 const $ = (id) => document.getElementById(id);
+const MIN_VALID_MOVES = 6;
 
 function isBlank(card) {
     if (!card) return false;
@@ -35,14 +36,7 @@ function initTabs() {
 async function loadData() {
     const res = await fetch('/api/data', { cache: 'no-store' });
     state.data = await res.json();
-    const byId = {};
-    (state.data.analysis_types || []).forEach((a) => {
-        byId[a.id] = a;
-    });
-    state.analysis = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((id) => {
-        const item = byId[id] || { id, title: `Analysis ${id}`, trials: [] };
-        return { ...item, ...(analysisDefinitions[id] || {}), trials: item.trials || [] };
-    });
+    state.analysis = buildAnalysisData(state.data);
 }
 
 function renderStats() {
@@ -116,6 +110,148 @@ function renderTrialSelect() {
         stopPlayback();
         renderTrial();
     };
+}
+
+function trialMoveCount(trial) {
+    return Number(trial.move_count ?? (trial.moves || []).length) || 0;
+}
+
+function normalizeTrial(trial) {
+    const moves = Array.isArray(trial.moves) ? trial.moves.filter((m) => Number.isInteger(m?.row) && Number.isInteger(m?.col)) : [];
+    const moveCount = trialMoveCount({ ...trial, moves });
+    return {
+        ...trial,
+        moves,
+        move_count: moveCount,
+        blank_card_count: Number(trial.blank_card_count || 0)
+    };
+}
+
+function trialIdKey(trial) {
+    const first = trial.moves?.[0];
+    const last = trial.moves?.[trial.moves.length - 1];
+    return [
+        trial.participant || '',
+        trial.condition || '',
+        trial.outcome || '',
+        trial.move_count || 0,
+        Number(numeric(trial.messiness_score).toFixed(4)),
+        first ? `${first.row}-${first.col}-${first.value || ''}` : 'nf',
+        last ? `${last.row}-${last.col}-${last.value || ''}` : 'nl'
+    ].join('|');
+}
+
+function dedupeTrials(trials) {
+    const map = new Map();
+    trials.forEach((trial) => {
+        map.set(trialIdKey(trial), trial);
+    });
+    return Array.from(map.values());
+}
+
+function repeatParticipants(trials) {
+    const byP = new Map();
+    trials.forEach((t) => {
+        const p = String(t.participant || 'N/A');
+        if (!byP.has(p)) byP.set(p, []);
+        byP.get(p).push(t);
+    });
+    return Array.from(byP.entries())
+        .filter(([, list]) => list.length > 1)
+        .sort((a, b) => b[1].length - a[1].length);
+}
+
+function messiness(trial) {
+    if (typeof trial.messiness_score === 'number') return trial.messiness_score;
+    const pts = trial.moves || [];
+    if (!pts.length) return 0;
+    const avgRow = avg(pts.map((m) => m.row));
+    const avgCol = avg(pts.map((m) => m.col));
+    return avg(pts.map((m) => Math.hypot(m.row - avgRow, m.col - avgCol)));
+}
+
+function repetitionRatio(trial) {
+    const moves = trial.moves || [];
+    if (!moves.length) return 0;
+    const unique = new Set(moves.map((m) => `${m.value || ''}-${m.suit_symbol || ''}-${m.row}-${m.col}`)).size;
+    return 1 - unique / moves.length;
+}
+
+function progressionDelta(trial) {
+    const moves = trial.moves || [];
+    if (moves.length < 4) return 0;
+    const segmentSize = Math.max(2, Math.floor(moves.length / 3));
+    const early = moves.slice(0, segmentSize);
+    const late = moves.slice(-segmentSize);
+    const spread = (segment) => {
+        const cRow = avg(segment.map((m) => m.row));
+        const cCol = avg(segment.map((m) => m.col));
+        return avg(segment.map((m) => Math.hypot(m.row - cRow, m.col - cCol)));
+    };
+    return spread(late) - spread(early);
+}
+
+function buildAnalysisData(data) {
+    const rawAnalyses = data.analysis_types || [];
+    const allRaw = rawAnalyses.flatMap((a) => (a.trials || []).map((t) => normalizeTrial(t)));
+    const nonEmptyRaw = allRaw.filter((t) => t.moves.length > 0);
+    const nonEmpty = dedupeTrials(nonEmptyRaw);
+    const valid = nonEmpty.filter((t) => t.move_count >= MIN_VALID_MOVES);
+    const success = valid.filter((t) => t.outcome === 'success');
+    const fail = valid.filter((t) => t.outcome !== 'success');
+    const repeated = repeatParticipants(nonEmpty);
+    const repeatedMixed = repeated.filter(([, list]) => {
+        const outcomes = new Set(list.map((t) => t.outcome));
+        return outcomes.has('success') && outcomes.has('fail');
+    });
+    const progressionFallback = [...valid]
+        .sort((a, b) => Math.abs(progressionDelta(b)) - Math.abs(progressionDelta(a)))
+        .slice(0, 16);
+
+    const idToTrials = {
+        1: success.filter((t) => t.move_count >= 15).slice(0, 24),
+        2: fail.filter((t) => t.move_count < 15).slice(0, 24),
+        3: success.slice(0, 32),
+        4: (repeated.length
+            ? repeated.slice(0, 12).flatMap(([, list]) => list.sort((a, b) => a.move_count - b.move_count))
+            : progressionFallback),
+        5: valid
+            .filter((t) => t.moves.length >= 5)
+            .slice(0, 32)
+            .map((t) => ({ ...t, moves: t.moves.slice(0, 5), move_count: 5 })),
+        6: (repeatedMixed.length
+            ? repeatedMixed.slice(0, 16).flatMap(([, list]) => list.sort((a, b) => a.move_count - b.move_count))
+            : [...fail.slice(0, 10), ...success.slice(0, 10)]),
+        7: (() => {
+            const sorted = [...valid].sort((a, b) => messiness(a) - messiness(b));
+            return [...sorted.slice(0, 6), ...sorted.slice(-6)];
+        })(),
+        8: (() => {
+            const s = [...success].sort((a, b) => a.move_count - b.move_count);
+            return [...s.slice(0, 8), ...s.slice(-8)];
+        })(),
+        9: (() => {
+            const sorted = [...valid].sort((a, b) => repetitionRatio(b) - repetitionRatio(a));
+            return [...sorted.slice(0, 8), ...sorted.slice(-8)];
+        })()
+    };
+
+    const byId = {};
+    rawAnalyses.forEach((a) => {
+        byId[a.id] = a;
+    });
+
+    return [1, 2, 3, 4, 5, 6, 7, 8, 9].map((id) => {
+        const base = byId[id] || { id, title: `Analysis ${id}`, trials: [] };
+        const derived = idToTrials[id] || [];
+        const fallback = (base.trials || []).map((t) => normalizeTrial(t)).filter((t) => t.moves.length > 0);
+        const trials = derived.length ? dedupeTrials(derived) : dedupeTrials(fallback);
+        return {
+            ...base,
+            ...(analysisDefinitions[id] || {}),
+            trials
+        };
+    });
 }
 
 function renderGrid() {
@@ -400,10 +536,13 @@ function trialKey(trial) {
 }
 
 function getUniqueTrials() {
-    const all = (state.data?.analysis_types || []).flatMap((analysis) => analysis.trials || []);
+    const all = (state.analysis || []).flatMap((analysis) => analysis.trials || []);
     const map = new Map();
     all.forEach((trial) => {
-        map.set(trialKey(trial), trial);
+        const normalized = normalizeTrial(trial);
+        if (normalized.moves.length > 0) {
+            map.set(trialKey(normalized), normalized);
+        }
     });
     return Array.from(map.values());
 }
