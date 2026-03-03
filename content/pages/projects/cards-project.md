@@ -41,10 +41,9 @@ Core question: what separates successful problem-solvers from those who struggle
 ## Live Interactive Viewer
 
 <iframe
-  src="https://auto-annotated-portfolio-9bdeb.onrender.com/?embed=1"
+  src="/cards-analysis/index.html?embed=1"
   title="Interactive Card Sorting Analysis"
   data-cards-embed="1"
-  data-cards-embed-fallback="local"
   style="width:100%;min-height:1240px;border:0;border-radius:12px;background:transparent;"
   loading="lazy"
 ></iframe>
