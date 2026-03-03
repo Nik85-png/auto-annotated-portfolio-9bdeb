@@ -2,9 +2,9 @@ const analysisDefinitions = {
     1: { title: 'Successful Clean Patterns (Many Moves)', explanation: 'Successful participants with many exploratory moves while keeping structure.' },
     2: { title: 'Failed Messy Patterns (Few Moves)', explanation: 'Failed trials where organization breaks down early.' },
     3: { title: 'All Successful Trials', explanation: 'All success outcomes to compare multiple winning paths.' },
-    4: { title: 'In-Trial Progression (Early vs Late)', explanation: 'Compares how spatial organization changes from the start to the end of each trial.' },
+    4: { title: 'In-Trial Progression (Early vs Late)', explanation: 'Grid highlights move phases: blue border = early (first ⅓ of moves), orange border = late (last ⅓). All trials are included — use the outcome filter or "Choose Trials" to narrow down.' },
     5: { title: 'Opening Strategies (First 5 Moves)', explanation: 'First moves that shape final outcomes.' },
-    6: { title: 'Retry and Recovery Patterns', explanation: 'Highlights repeated participants when available, otherwise contrasts failed and successful strategies.' },
+    6: { title: 'Retry and Recovery Patterns', explanation: 'All trials included. Use "Choose Trials" to hand-pick participants across all outcomes and compare their attempts. Filter by outcome type to focus on recovery from failure.' },
     7: { title: 'Extreme Cases (Cleanest vs Messiest)', explanation: 'Best and worst spatial organization cases.' },
     8: { title: 'Speed Comparison (Quick vs Slow Solvers)', explanation: 'Efficiency versus exploration in successful runs.' },
     9: { title: 'Card Repetition Patterns', explanation: 'Focused repetition versus broad exploration.' }
@@ -13,12 +13,15 @@ const analysisDefinitions = {
 const state = {
     data: null,
     analysis: [],
+    allValidTrials: [],          // full deduplicated pool for trial picker
     currentAnalysisIdx: 0,
     currentTrialIdx: 0,
     currentMoveIdx: 0,
     playing: false,
     speed: 800,
-    timer: null
+    timer: null,
+    outcomeFilter: 'all',        // 'all' | 'success' | 'fail' | 'clean' | 'messy'
+    customPickedKeys: null       // null = use analysis pool; Set<string> = user picks
 };
 
 const $ = (id) => document.getElementById(id);
@@ -56,7 +59,7 @@ function currentAnalysis() {
 }
 
 function currentTrial() {
-    return currentAnalysis().trials[state.currentTrialIdx] || null;
+    return getDisplayTrials()[state.currentTrialIdx] || null;
 }
 
 function renderAnalysisSelect() {
@@ -73,8 +76,11 @@ function renderAnalysisSelect() {
         state.currentAnalysisIdx = parseInt(select.value, 10) || 0;
         state.currentTrialIdx = 0;
         state.currentMoveIdx = 0;
+        state.outcomeFilter = 'all';
+        state.customPickedKeys = null;
         stopPlayback();
         renderAnalysisExplanation();
+        renderOutcomeFilter();
         renderTrialSelect();
         renderTrial();
     };
@@ -87,10 +93,10 @@ function renderAnalysisExplanation() {
 
 function renderTrialSelect() {
     const select = $('trialSelect');
-    const trials = currentAnalysis().trials || [];
+    const trials = getDisplayTrials();
     select.innerHTML = '';
     if (trials.length === 0) {
-        select.innerHTML = '<option>No trials available</option>';
+        select.innerHTML = '<option>No trials match current filters</option>';
         return;
     }
     trials.forEach((trial, idx) => {
@@ -204,24 +210,21 @@ function buildAnalysisData(data) {
         const outcomes = new Set(list.map((t) => t.outcome));
         return outcomes.has('success') && outcomes.has('fail');
     });
-    const progressionFallback = [...valid]
-        .sort((a, b) => Math.abs(progressionDelta(b)) - Math.abs(progressionDelta(a)))
-        .slice(0, 16);
+    // Store full pool for trial picker and outcome filter
+    state.allValidTrials = valid;
 
     const idToTrials = {
         1: success.filter((t) => t.move_count >= 15).slice(0, 24),
         2: fail.filter((t) => t.move_count < 15).slice(0, 24),
         3: success.slice(0, 32),
-        4: (repeated.length
-            ? repeated.slice(0, 12).flatMap(([, list]) => list.sort((a, b) => a.move_count - b.move_count))
-            : progressionFallback),
+        // Analysis 4: all valid trials sorted by strongest early-vs-late progression delta
+        4: [...valid].sort((a, b) => Math.abs(progressionDelta(b)) - Math.abs(progressionDelta(a))),
         5: valid
             .filter((t) => t.moves.length >= 5)
             .slice(0, 32)
             .map((t) => ({ ...t, moves: t.moves.slice(0, 5), move_count: 5 })),
-        6: (repeatedMixed.length
-            ? repeatedMixed.slice(0, 16).flatMap(([, list]) => list.sort((a, b) => a.move_count - b.move_count))
-            : [...fail.slice(0, 10), ...success.slice(0, 10)]),
+        // Analysis 6: all trials (fail first so failed → success recovery is front of list)
+        6: [...fail, ...success],
         7: (() => {
             const sorted = [...valid].sort((a, b) => messiness(a) - messiness(b));
             return [...sorted.slice(0, 6), ...sorted.slice(-6)];
@@ -268,11 +271,13 @@ function renderGrid() {
     const current = total === 0 ? 0 : Math.min(state.currentMoveIdx + 1, total);
     $('moveCounter').textContent = `Move ${current} / ${total}`;
 
+    const isProgression = (state.analysis[state.currentAnalysisIdx]?.id === 4);
+    const totalMoves = moves.length;
     const gridState = {};
     for (let i = 0; i <= state.currentMoveIdx && i < moves.length; i++) {
         const m = moves[i];
         if (Number.isInteger(m.row) && Number.isInteger(m.col)) {
-            gridState[`${m.row}-${m.col}`] = { ...m, current: i === state.currentMoveIdx };
+            gridState[`${m.row}-${m.col}`] = { ...m, current: i === state.currentMoveIdx, arrayIndex: i };
         }
     }
 
@@ -288,7 +293,14 @@ function renderGrid() {
                 continue;
             }
             const blank = isBlank(m);
-            const cls = `cell card-cell${m.current ? ' current' : ''}${blank ? ' blank' : ''}`;
+            let phaseClass = '';
+            if (isProgression && !m.current && totalMoves >= 6) {
+                const seg = Math.max(2, Math.floor(totalMoves / 3));
+                const ai = m.arrayIndex ?? 0;
+                if (ai < seg) phaseClass = ' phase-early';
+                else if (ai >= totalMoves - seg) phaseClass = ' phase-late';
+            }
+            const cls = `cell card-cell${m.current ? ' current' : ''}${blank ? ' blank' : ''}${phaseClass}`;
             const symbol = blank ? '□' : `${m.value || ''}${m.suit_symbol || ''}`;
             const color = blank ? '#ffffff' : m.color === 'red' ? '#dc2626' : '#111827';
             root.innerHTML += `<div class="${cls}" style="color:${color}">${symbol}</div>`;
@@ -347,6 +359,8 @@ function togglePlayback() {
 }
 
 function bindControls() {
+    if ($('openPickerBtn')) $('openPickerBtn').onclick = openTrialPicker;
+    if ($('closePickerBtn')) $('closePickerBtn').onclick = closeTrialPicker;
     $('resetBtn').onclick = () => {
         stopPlayback();
         state.currentMoveIdx = 0;
@@ -498,6 +512,187 @@ function renderCharts() {
     window.addEventListener('resize', resizeCharts);
 }
 
+// ── Messiness thresholds for clean/messy filter ─────────────────────────────
+function messinessThresholds() {
+    const all = state.allValidTrials || [];
+    const scores = all.map((t) => messiness(t)).filter(Number.isFinite).sort((a, b) => a - b);
+    if (scores.length < 6) return { cleanMax: 1.5, messyMin: 3.0 };
+    return {
+        cleanMax: scores[Math.floor(scores.length * 0.33)],
+        messyMin: scores[Math.floor(scores.length * 0.67)]
+    };
+}
+
+// ── Filtered trial list shown in dropdown ────────────────────────────────────
+function getDisplayTrials() {
+    let pool;
+    if (state.customPickedKeys) {
+        pool = (state.allValidTrials || []).filter((t) => state.customPickedKeys.has(trialIdKey(t)));
+    } else {
+        pool = currentAnalysis().trials || [];
+    }
+    if (state.outcomeFilter === 'all') return pool;
+    const { cleanMax, messyMin } = messinessThresholds();
+    if (state.outcomeFilter === 'success') return pool.filter((t) => t.outcome === 'success');
+    if (state.outcomeFilter === 'fail')    return pool.filter((t) => t.outcome !== 'success');
+    if (state.outcomeFilter === 'clean')   return pool.filter((t) => messiness(t) <= cleanMax);
+    if (state.outcomeFilter === 'messy')   return pool.filter((t) => messiness(t) >= messyMin);
+    return pool;
+}
+
+// ── Outcome filter bar ───────────────────────────────────────────────────────
+function renderOutcomeFilter() {
+    const el = $('outcomeFilter');
+    if (!el) return;
+    const filters = [
+        { key: 'all',     label: 'All' },
+        { key: 'success', label: 'Success' },
+        { key: 'fail',    label: 'Failed' },
+        { key: 'clean',   label: 'Clean (low mess)' },
+        { key: 'messy',   label: 'Messy (high mess)' }
+    ];
+    el.innerHTML = filters
+        .map((f) => `<button type="button" class="filter-btn${state.outcomeFilter === f.key ? ' active' : ''}" data-filter="${f.key}">${f.label}</button>`)
+        .join('');
+    el.querySelectorAll('.filter-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            state.outcomeFilter = btn.dataset.filter;
+            state.currentTrialIdx = 0;
+            state.currentMoveIdx = 0;
+            stopPlayback();
+            renderOutcomeFilter();
+            renderTrialSelect();
+            renderTrial();
+        });
+    });
+    const pickerBtn = $('openPickerBtn');
+    if (pickerBtn) {
+        pickerBtn.textContent = state.customPickedKeys
+            ? `Choose Trials (${state.customPickedKeys.size} picked)`
+            : 'Choose Trials\u2026';
+    }
+}
+
+// ── Trial picker modal ───────────────────────────────────────────────────────
+let _pickerFilter = 'all';
+let _pickerSearch = '';
+let _pickerChecked = new Set();
+
+function openTrialPicker() {
+    _pickerFilter = 'all';
+    _pickerSearch = '';
+    _pickerChecked = state.customPickedKeys
+        ? new Set(state.customPickedKeys)
+        : new Set((currentAnalysis().trials || []).map((t) => trialIdKey(t)));
+    const overlay = $('trialPickerOverlay');
+    if (!overlay) return;
+    overlay.classList.remove('hidden');
+    _renderPickerContent();
+}
+
+function closeTrialPicker() {
+    const overlay = $('trialPickerOverlay');
+    if (overlay) overlay.classList.add('hidden');
+}
+
+function _pickerPool() {
+    const all = state.allValidTrials || [];
+    const { cleanMax, messyMin } = messinessThresholds();
+    let pool;
+    if (_pickerFilter === 'success')    pool = all.filter((t) => t.outcome === 'success');
+    else if (_pickerFilter === 'fail')  pool = all.filter((t) => t.outcome !== 'success');
+    else if (_pickerFilter === 'clean') pool = all.filter((t) => messiness(t) <= cleanMax);
+    else if (_pickerFilter === 'messy') pool = all.filter((t) => messiness(t) >= messyMin);
+    else                                pool = all;
+    if (_pickerSearch.trim()) {
+        const q = _pickerSearch.trim().toLowerCase();
+        pool = pool.filter((t) =>
+            String(t.participant || '').toLowerCase().includes(q) ||
+            String(t.condition || '').toLowerCase().includes(q) ||
+            String(t.outcome || '').toLowerCase().includes(q));
+    }
+    return pool;
+}
+
+function _renderPickerContent() {
+    // Filter bar
+    const fb = $('pickerFilterBar');
+    if (fb) {
+        const filters = [
+            { key: 'all', label: 'All' }, { key: 'success', label: 'Success' },
+            { key: 'fail', label: 'Failed' }, { key: 'clean', label: 'Clean' }, { key: 'messy', label: 'Messy' }
+        ];
+        fb.innerHTML = filters
+            .map((f) => `<button type="button" class="filter-btn${_pickerFilter === f.key ? ' active' : ''}" data-pf="${f.key}">${f.label}</button>`)
+            .join('');
+        fb.querySelectorAll('[data-pf]').forEach((btn) => {
+            btn.addEventListener('click', () => { _pickerFilter = btn.dataset.pf; _renderPickerContent(); });
+        });
+    }
+    // Search input
+    const si = $('pickerSearch');
+    if (si) { si.value = _pickerSearch; si.oninput = () => { _pickerSearch = si.value; _renderPickerContent(); }; }
+    // Selected count
+    const cl = $('pickerCount');
+    if (cl) cl.textContent = `${_pickerChecked.size} selected`;
+    // Trial list
+    const list = $('pickerList');
+    if (!list) return;
+    const pool = _pickerPool();
+    if (pool.length === 0) { list.innerHTML = '<p class="muted" style="padding:8px">No trials match.</p>'; return; }
+    list.innerHTML = pool.map((t) => {
+        const key = trialIdKey(t);
+        const checked = _pickerChecked.has(key) ? 'checked' : '';
+        const ok = t.outcome === 'success';
+        const oc = ok ? '#10b981' : '#ef4444';
+        const mc = Number(t.move_count ?? (t.moves || []).length);
+        const ms = typeof t.messiness_score === 'number' ? t.messiness_score.toFixed(2) : '?';
+        const blankTag = (t.blank_card_count || 0) > 0 ? ' [B]' : '';
+        return `<label class="picker-item">
+            <input type="checkbox" class="picker-cb" data-key="${key}" ${checked} />
+            <span class="picker-outcome" style="color:${oc}">${ok ? '\u2713' : '\u2717'}</span>
+            <span class="picker-label">P${t.participant || 'N/A'} &middot; ${t.condition || '?'} &middot; ${mc} moves &middot; mess ${ms}${blankTag}</span>
+        </label>`;
+    }).join('');
+    list.querySelectorAll('.picker-cb').forEach((cb) => {
+        cb.addEventListener('change', () => {
+            if (cb.checked) _pickerChecked.add(cb.dataset.key);
+            else _pickerChecked.delete(cb.dataset.key);
+            const cl2 = $('pickerCount');
+            if (cl2) cl2.textContent = `${_pickerChecked.size} selected`;
+        });
+    });
+    const sa = $('pickerSelectAll');
+    if (sa) sa.onclick = () => { _pickerPool().forEach((t) => _pickerChecked.add(trialIdKey(t))); _renderPickerContent(); };
+    const ca = $('pickerClearAll');
+    if (ca) ca.onclick = () => { _pickerPool().forEach((t) => _pickerChecked.delete(trialIdKey(t))); _renderPickerContent(); };
+    const ap = $('pickerApply');
+    if (ap) ap.onclick = () => {
+        state.customPickedKeys = _pickerChecked.size > 0 ? new Set(_pickerChecked) : null;
+        state.currentTrialIdx = 0;
+        state.currentMoveIdx = 0;
+        stopPlayback();
+        closeTrialPicker();
+        renderOutcomeFilter();
+        renderTrialSelect();
+        renderTrial();
+    };
+    const rp = $('pickerReset');
+    if (rp) rp.onclick = () => {
+        state.customPickedKeys = null;
+        state.currentTrialIdx = 0;
+        state.currentMoveIdx = 0;
+        stopPlayback();
+        closeTrialPicker();
+        renderOutcomeFilter();
+        renderTrialSelect();
+        renderTrial();
+    };
+    // Close on overlay click
+    const overlay = $('trialPickerOverlay');
+    if (overlay) overlay.onclick = (e) => { if (e.target === overlay) closeTrialPicker(); };
+}
+
 function numeric(v) {
     return typeof v === 'number' && Number.isFinite(v) ? v : Number(v) || 0;
 }
@@ -607,6 +802,7 @@ async function init() {
     await loadData();
     renderStats();
     renderAnalysisSelect();
+    renderOutcomeFilter();
     renderTrialSelect();
     renderTrial();
     bindControls();
