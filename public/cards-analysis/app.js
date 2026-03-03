@@ -1,16 +1,27 @@
 ﻿const analysisDefinitions={1:{title:'?Successful Clean Patterns (Many Moves)',explanation:'Successful participants with 15+ moves who stayed spatially systematic instead of becoming scattered.'},2:{title:'Failed Messy Patterns (Few Moves)',explanation:'Failed trials with fewer moves where spatial structure breaks down early.'},3:{title:'? All Successful Trials',explanation:'A wider view of successful trials to compare clean and exploratory winning paths.'},4:{title:'?? Learning Progression',explanation:'Tracks whether organization improves or deteriorates across moves in a trial.'},5:{title:'?? Opening Strategies (First 5 Moves)',explanation:'Compares opening behavior and early placement structure between successful and failed runs.'},6:{title:'?? Retry Progression (Same Person, Multiple Attempts)',explanation:'Shows whether participants adjust strategy after failure across multiple attempts.'},7:{title:'? Extreme Cases (Cleanest vs Messiest)',explanation:'Highlights polar spatial patterns to show how structure quality differs at extremes.'},8:{title:'?? Speed Comparison (Quick vs Slow Solvers)',explanation:'Compares quick and slow successful attempts to inspect efficiency versus exploration.'},9:{title:'?? Card Repetition Patterns',explanation:'Compares focused repetition against wider card exploration behavior.'}};
-let dataset=null,analysisTypes=[],currentAnalysisIdx=0,currentTrialIdx=0,currentMove=0,isPlaying=false,showingFinalState=false,timer=null,speed=800;
+let dataset=null,analysisTypes=[],allValidTrials=[],currentAnalysisIdx=0,currentTrialIdx=0,currentMove=0,isPlaying=false,showingFinalState=false,timer=null,speed=800,outcomeFilter='all',customPickedKeys=null;
 const statsBar=document.getElementById('statsBar'),analysisSelect=document.getElementById('analysisType'),trialSelect=document.getElementById('trialSelect'),analysisText=document.getElementById('analysisText'),moveCounter=document.getElementById('moveCounter'),trialInfo=document.getElementById('trialInfo'),speedControl=document.getElementById('speedControl'),speedLabel=document.getElementById('speedLabel'),finalStateBtn=document.getElementById('finalStateBtn'),modeIndicator=document.getElementById('modeIndicator'),cardsContainer=document.getElementById('cardsContainer');
 const urlParams=new URLSearchParams(window.location.search),embedMode=urlParams.get('embed')==='1';
 if(embedMode){document.body.classList.add('embed-mode');const tabs=document.querySelector('.tabs'),overview=document.getElementById('overview'),statsPanel=document.getElementById('statistics'),animations=document.getElementById('animations');if(tabs)tabs.style.display='none';if(overview)overview.classList.remove('active');if(statsPanel)statsPanel.classList.remove('active');if(animations)animations.classList.add('active');}
 document.querySelectorAll('.tab').forEach((tab)=>{tab.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach((t)=>t.classList.remove('active'));document.querySelectorAll('.panel').forEach((p)=>p.classList.remove('active'));tab.classList.add('active');document.getElementById(tab.dataset.panel).classList.add('active');scheduleEmbedHeight();resizeGraphs();});});
 function renderStats(stats){const total=Number(stats.total_trials)||229,successRate=Number(stats.success_rate)||46.7,blankRate=Number(stats.blank_card_success_rate)||73.3,noBlankRate=Number(stats.no_blank_success_rate)||37.3;statsBar.innerHTML=`<div class="stat"><div class="value">${total}</div><div class="label">Total Trials</div></div><div class="stat"><div class="value">${successRate.toFixed(1)}%</div><div class="label">Success Rate</div></div><div class="stat"><div class="value">${blankRate.toFixed(1)}%</div><div class="label">Success With Blank</div></div><div class="stat"><div class="value">${noBlankRate.toFixed(1)}%</div><div class="label">Success Without Blank</div></div>`;}
-function initSelectors(){analysisSelect.innerHTML='';analysisTypes.forEach((a,i)=>{const opt=document.createElement('option');opt.value=String(i);opt.textContent=a.title||`Analysis ${i+1}`;analysisSelect.appendChild(opt);});analysisSelect.addEventListener('change',()=>{currentAnalysisIdx=parseInt(analysisSelect.value,10)||0;currentTrialIdx=0;currentMove=0;showingFinalState=false;finalStateBtn.classList.remove('active');modeIndicator.classList.remove('active');rebuildTrialSelector();loadCurrentTrial();});trialSelect.addEventListener('change',()=>{currentTrialIdx=parseInt(trialSelect.value,10)||0;currentMove=0;showingFinalState=false;finalStateBtn.classList.remove('active');modeIndicator.classList.remove('active');loadCurrentTrial();});}
-function rebuildTrialSelector(){trialSelect.innerHTML='';const current=analysisTypes[currentAnalysisIdx]||{trials:[]},trials=Array.isArray(current.trials)?current.trials:[];if(trials.length===0){trialSelect.innerHTML='<option>No trials available</option>';return;}trials.forEach((trial,idx)=>{const opt=document.createElement('option'),icon=trial.outcome==='success'?'SUCCESS':'FAIL',participant=trial.participant||'N/A',condition=trial.condition||'N/A',moves=Number(trial.move_count??(Array.isArray(trial.moves)?trial.moves.length:0)),hasBlank=trialHasBlank(trial),blankIndicator=hasBlank?' [blank]':'';opt.value=String(idx);opt.textContent=`Trial ${idx+1} [P${participant}] ${icon} | ${condition} | ${moves} moves${blankIndicator}`;trialSelect.appendChild(opt);});}
-function getCurrentTrial(){const analysis=analysisTypes[currentAnalysisIdx];if(!analysis||!Array.isArray(analysis.trials))return null;return analysis.trials[currentTrialIdx]||null;}function trialHasBlank(trial){return Array.isArray(trial?.final_state)&&trial.final_state.some((c)=>c&&(c.is_blank||String(c.value).toUpperCase()==='BLANK'));}function countBlankCards(trial){if(!Array.isArray(trial?.final_state))return 0;return trial.final_state.filter((c)=>c&&(c.is_blank||String(c.value).toUpperCase()==='BLANK')).length;}
+function initSelectors(){analysisSelect.innerHTML='';analysisTypes.forEach((a,i)=>{const opt=document.createElement('option');opt.value=String(i);opt.textContent=a.title||`Analysis ${i+1}`;analysisSelect.appendChild(opt);});analysisSelect.addEventListener('change',()=>{currentAnalysisIdx=parseInt(analysisSelect.value,10)||0;currentTrialIdx=0;currentMove=0;showingFinalState=false;outcomeFilter='all';customPickedKeys=null;finalStateBtn.classList.remove('active');modeIndicator.classList.remove('active');renderOutcomeFilter();rebuildTrialSelector();loadCurrentTrial();});trialSelect.addEventListener('change',()=>{currentTrialIdx=parseInt(trialSelect.value,10)||0;currentMove=0;showingFinalState=false;finalStateBtn.classList.remove('active');modeIndicator.classList.remove('active');loadCurrentTrial();});}
+function rebuildTrialSelector(){trialSelect.innerHTML='';const trials=getDisplayTrials();if(trials.length===0){trialSelect.innerHTML='<option>No trials match filters</option>';return;}trials.forEach((trial,idx)=>{const opt=document.createElement('option'),icon=trial.outcome==='success'?'SUCCESS':'FAIL',participant=trial.participant||'N/A',condition=trial.condition||'N/A',moves=Number(trial.move_count??(Array.isArray(trial.moves)?trial.moves.length:0)),hasBlank=trialHasBlank(trial),blankIndicator=hasBlank?' [blank]':'';opt.value=String(idx);opt.textContent=`Trial ${idx+1} [P${participant}] ${icon} | ${condition} | ${moves} moves${blankIndicator}`;trialSelect.appendChild(opt);})};}
+function getCurrentTrial(){const trials=getDisplayTrials();return trials[currentTrialIdx]||null;}function trialHasBlank(trial){return Array.isArray(trial?.final_state)&&trial.final_state.some((c)=>c&&(c.is_blank||String(c.value).toUpperCase()==='BLANK'));}function countBlankCards(trial){if(!Array.isArray(trial?.final_state))return 0;return trial.final_state.filter((c)=>c&&(c.is_blank||String(c.value).toUpperCase()==='BLANK')).length;}
 function loadCurrentTrial(){const analysis=analysisTypes[currentAnalysisIdx];analysisText.textContent=analysis?.explanation||'';const trial=getCurrentTrial();if(!trial){trialInfo.innerHTML='<p>No trial data available.</p>';renderGrid(null);moveCounter.textContent='Move 0 / 0';scheduleEmbedHeight();return;}renderGrid(trial);const moves=Array.isArray(trial.moves)?trial.moves.length:0;if(showingFinalState){const finalCards=Array.isArray(trial.final_state)?trial.final_state.length:0;moveCounter.textContent=`Final State: ${finalCards} cards placed`;}else{moveCounter.textContent=`Move ${Math.min(currentMove+1,moves)} / ${moves}`;}const outcomeText=trial.outcome==='success'?'Success':'Failed',hasBlank=trialHasBlank(trial),blankCount=hasBlank?countBlankCards(trial):0;trialInfo.innerHTML=`<p><strong>Participant:</strong> ${trial.participant||'N/A'}</p><p><strong>Outcome:</strong> ${outcomeText}</p><p><strong>Condition:</strong> ${trial.condition||'N/A'}</p><p><strong>Total Moves:</strong> ${Number(trial.move_count??moves)}</p><p><strong>Messiness Score:</strong> ${typeof trial.messiness_score==='number'?trial.messiness_score.toFixed(2):'N/A'}</p>${hasBlank?`<p style="color:#f59e0b;font-weight:700;">Uses ${blankCount} blank card${blankCount>1?'s':''}</p>`:''}`;scheduleEmbedHeight();}
-function renderGrid(trial){const grid=document.getElementById('grid');grid.innerHTML='';grid.innerHTML+='<div class="cell head"></div>';for(let c=0;c<8;c++)grid.innerHTML+=`<div class="cell head">${c}</div>`;const state={};if(showingFinalState&&trial&&Array.isArray(trial.final_state)){for(const card of trial.final_state){if(card)state[`${card.row}-${card.col}`]={...card,current:false};}}else if(trial&&Array.isArray(trial.moves)){for(let i=0;i<=currentMove&&i<trial.moves.length;i++){const m=trial.moves[i];if(m)state[`${m.row}-${m.col}`]={...m,current:i===currentMove};}}
-for(let r=0;r<8;r++){grid.innerHTML+=`<div class="cell head">${r}</div>`;for(let c=0;c<8;c++){const m=state[`${r}-${c}`];if(!m){grid.innerHTML+='<div class="cell empty"></div>';continue;}const symbol=(m.is_blank||String(m.value).toUpperCase()==='BLANK')?'&#9633;':`${m.value||''}${m.suit_symbol||''}`,cls=`cell card-cell${m.current?' current':''}${(m.is_blank||String(m.value).toUpperCase()==='BLANK')?' blank':''}`,color=(m.is_blank||String(m.value).toUpperCase()==='BLANK')?'white':(m.color==='red'?'#dc2626':'#111827');grid.innerHTML+=`<div class="${cls}" style="color:${color}">${symbol}</div>`;}}}
+function renderGrid(trial){
+    const isProgression = analysisTypes[currentAnalysisIdx]?.id === 4;
+    const grid=document.getElementById('grid');grid.innerHTML='';
+grid.innerHTML+='<div class="cell head"></div>';for(let c=0;c<8;c++)grid.innerHTML+=`<div class="cell head">${c}</div>`;
+const state={};
+if(showingFinalState&&trial&&Array.isArray(trial.final_state)){for(const card of trial.final_state){if(card)state[`${card.row}-${card.col}`]={...card,current:false,arrayIndex:-1};}}
+else if(trial&&Array.isArray(trial.moves)){for(let i=0;i<=currentMove&&i<trial.moves.length;i++){const m=trial.moves[i];if(m)state[`${m.row}-${m.col}`]={...m,current:i===currentMove,arrayIndex:i};}}
+const totalMoves=trial&&Array.isArray(trial.moves)?trial.moves.length:0;
+for(let r=0;r<8;r++){grid.innerHTML+=`<div class="cell head">${r}</div>`;for(let c=0;c<8;c++){const m=state[`${r}-${c}`];if(!m){grid.innerHTML+='<div class="cell empty"></div>';continue;}
+const isBlankCard=(m.is_blank||String(m.value).toUpperCase()==='BLANK');
+let phaseClass='';
+if(isProgression&&!m.current&&!showingFinalState&&totalMoves>=6){const seg=Math.max(2,Math.floor(totalMoves/3));const ai=m.arrayIndex??0;if(ai>=0&&ai<seg)phaseClass=' phase-early';else if(ai>=0&&ai>=totalMoves-seg)phaseClass=' phase-late';}
+const symbol=isBlankCard?'&#9633;':`${m.value||''}${m.suit_symbol||''}`,cls=`cell card-cell${m.current?' current':''}${isBlankCard?' blank':''}${phaseClass}`,color=isBlankCard?'white':(m.color==='red'?'#dc2626':'#111827');grid.innerHTML+=`<div class="${cls}" style="color:${color}">${symbol}</div>`;}}}
 function toggleFinalState(){showingFinalState=!showingFinalState;if(showingFinalState){const currentTrial=getCurrentTrial();if(currentTrial&&!trialHasBlank(currentTrial)){const trials=(analysisTypes[currentAnalysisIdx]&&Array.isArray(analysisTypes[currentAnalysisIdx].trials))?analysisTypes[currentAnalysisIdx].trials:[];const nextBlankIdx=trials.findIndex((t)=>trialHasBlank(t));if(nextBlankIdx>=0){currentTrialIdx=nextBlankIdx;trialSelect.value=String(nextBlankIdx);}}finalStateBtn.classList.add('active');finalStateBtn.textContent='Show Animation';modeIndicator.classList.add('active');if(isPlaying)playPause();}else{finalStateBtn.classList.remove('active');finalStateBtn.textContent='Show Final State';modeIndicator.classList.remove('active');}loadCurrentTrial();}
 function playPause(){if(showingFinalState)return;const trial=getCurrentTrial();if(!trial||!Array.isArray(trial.moves)||trial.moves.length===0)return;isPlaying=!isPlaying;document.getElementById('playBtn').textContent=isPlaying?'Pause':'Play';if(!isPlaying){clearInterval(timer);return;}timer=setInterval(()=>{if(currentMove<trial.moves.length-1){currentMove++;loadCurrentTrial();}else{isPlaying=false;document.getElementById('playBtn').textContent='Play';clearInterval(timer);}},speed);}
 function nextMove(){if(showingFinalState)return;const trial=getCurrentTrial();if(!trial||!Array.isArray(trial.moves))return;if(currentMove<trial.moves.length-1){currentMove++;loadCurrentTrial();}}
@@ -125,13 +136,18 @@ function buildAnalysisDataV2(data) {
         .sort((a, b) => Math.abs(progressionDeltaV2(b)) - Math.abs(progressionDeltaV2(a)))
         .slice(0, 16);
 
+    // Store full deduplicated pool for filter/picker
+    allValidTrials = valid;
+
     const idToTrials = {
         1: success.filter((t) => t.move_count >= 15).slice(0, 24),
         2: fail.filter((t) => t.move_count < 15).slice(0, 24),
         3: success.slice(0, 32),
-        4: repeated.length ? repeated.slice(0, 12).flatMap(([, list]) => list.sort((a, b) => a.move_count - b.move_count)) : progressionFallback,
+        // Analysis 4: ALL valid trials, strongest progression delta first
+        4: [...valid].sort((a, b) => Math.abs(progressionDeltaV2(b)) - Math.abs(progressionDeltaV2(a))),
         5: valid.filter((t) => t.moves.length >= 5).slice(0, 32).map((t) => ({ ...t, moves: t.moves.slice(0, 5), move_count: 5 })),
-        6: repeatedMixed.length ? repeatedMixed.slice(0, 16).flatMap(([, list]) => list.sort((a, b) => a.move_count - b.move_count)) : [...fail.slice(0, 10), ...success.slice(0, 10)],
+        // Analysis 6: ALL trials — fail first so recovery stories cluster naturally
+        6: [...fail, ...success],
         7: (() => {
             const sorted = [...valid].sort((a, b) => messinessV2(a) - messinessV2(b));
             return [...sorted.slice(0, 6), ...sorted.slice(-6)];
@@ -172,6 +188,125 @@ function getUniqueTrials() {
     return Array.from(map.values());
 }
 
+// ── Messiness thresholds for clean/messy filter ──────────────────────────────
+function messinessThresholdsV2() {
+    const scores = allValidTrials.map((t) => messinessV2(t)).filter(Number.isFinite).sort((a, b) => a - b);
+    if (scores.length < 6) return { cleanMax: 1.5, messyMin: 3.0 };
+    return { cleanMax: scores[Math.floor(scores.length * 0.33)], messyMin: scores[Math.floor(scores.length * 0.67)] };
+}
+
+// ── Filtered trial list for the dropdown ────────────────────────────────────
+function getDisplayTrials() {
+    let pool;
+    if (customPickedKeys) {
+        pool = allValidTrials.filter((t) => customPickedKeys.has(trialIdKeyV2(t)));
+    } else {
+        pool = (analysisTypes[currentAnalysisIdx] || {}).trials || [];
+    }
+    if (outcomeFilter === 'all') return pool;
+    const { cleanMax, messyMin } = messinessThresholdsV2();
+    if (outcomeFilter === 'success') return pool.filter((t) => t.outcome === 'success');
+    if (outcomeFilter === 'fail')    return pool.filter((t) => t.outcome !== 'success');
+    if (outcomeFilter === 'clean')   return pool.filter((t) => messinessV2(t) <= cleanMax);
+    if (outcomeFilter === 'messy')   return pool.filter((t) => messinessV2(t) >= messyMin);
+    return pool;
+}
+
+// ── Outcome filter bar ───────────────────────────────────────────────────────
+function renderOutcomeFilter() {
+    const el = document.getElementById('outcomeFilter');
+    if (!el) return;
+    const filters = [
+        { key: 'all', label: 'All' }, { key: 'success', label: 'Success' },
+        { key: 'fail', label: 'Failed' }, { key: 'clean', label: 'Clean' }, { key: 'messy', label: 'Messy' }
+    ];
+    el.innerHTML = filters.map((f) =>
+        `<button type="button" class="filter-chip${outcomeFilter === f.key ? ' active' : ''}" data-filter="${f.key}">${f.label}</button>`
+    ).join('');
+    el.querySelectorAll('.filter-chip').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            outcomeFilter = btn.dataset.filter;
+            currentTrialIdx = 0; currentMove = 0;
+            showingFinalState = false;
+            renderOutcomeFilter();
+            rebuildTrialSelector();
+            loadCurrentTrial();
+        });
+    });
+    const pb = document.getElementById('openPickerBtn');
+    if (pb) pb.textContent = customPickedKeys ? `Choose Trials (${customPickedKeys.size} picked)` : 'Choose Trials…';
+}
+
+// ── Trial picker modal ───────────────────────────────────────────────────────
+let _pf = 'all', _ps = '', _pc = new Set();
+
+function openTrialPicker() {
+    _pf = 'all'; _ps = '';
+    _pc = customPickedKeys ? new Set(customPickedKeys)
+        : new Set(((analysisTypes[currentAnalysisIdx] || {}).trials || []).map((t) => trialIdKeyV2(t)));
+    const ov = document.getElementById('trialPickerModal');
+    if (ov) { ov.style.display = 'flex'; _renderPicker(); }
+}
+function closeTrialPicker() {
+    const ov = document.getElementById('trialPickerModal');
+    if (ov) ov.style.display = 'none';
+}
+function _pickerPool() {
+    const { cleanMax, messyMin } = messinessThresholdsV2();
+    let pool;
+    if (_pf === 'success')      pool = allValidTrials.filter((t) => t.outcome === 'success');
+    else if (_pf === 'fail')    pool = allValidTrials.filter((t) => t.outcome !== 'success');
+    else if (_pf === 'clean')   pool = allValidTrials.filter((t) => messinessV2(t) <= cleanMax);
+    else if (_pf === 'messy')   pool = allValidTrials.filter((t) => messinessV2(t) >= messyMin);
+    else                        pool = allValidTrials;
+    if (_ps.trim()) {
+        const q = _ps.trim().toLowerCase();
+        pool = pool.filter((t) => String(t.participant || '').toLowerCase().includes(q) || String(t.condition || '').toLowerCase().includes(q) || String(t.outcome || '').toLowerCase().includes(q));
+    }
+    return pool;
+}
+function _renderPicker() {
+    const fb = document.getElementById('pickerFilterBar');
+    if (fb) {
+        fb.innerHTML = [['all','All'],['success','Success'],['fail','Failed'],['clean','Clean'],['messy','Messy']]
+            .map(([k,l]) => `<button type="button" class="filter-chip${_pf===k?' active':''}" data-pf="${k}">${l}</button>`).join('');
+        fb.querySelectorAll('[data-pf]').forEach((b) => b.addEventListener('click', () => { _pf = b.dataset.pf; _renderPicker(); }));
+    }
+    const si = document.getElementById('pickerSearch');
+    if (si) { si.value = _ps; si.oninput = () => { _ps = si.value; _renderPicker(); }; }
+    const cl = document.getElementById('pickerCount');
+    if (cl) cl.textContent = `${_pc.size} selected`;
+    const list = document.getElementById('pickerList');
+    if (!list) return;
+    const pool = _pickerPool();
+    if (!pool.length) { list.innerHTML = '<p style="padding:8px;color:#6b7280">No trials match.</p>'; return; }
+    list.innerHTML = pool.map((t) => {
+        const key = trialIdKeyV2(t), ok = t.outcome === 'success';
+        const mc = Number(t.move_count ?? (t.moves || []).length);
+        const ms = typeof t.messiness_score === 'number' ? t.messiness_score.toFixed(2) : '?';
+        const bk = (t.blank_card_count || 0) > 0 ? ' [B]' : '';
+        return `<label style="display:flex;align-items:center;gap:8px;padding:5px 6px;cursor:pointer;border-radius:6px">
+            <input type="checkbox" data-key="${key}" ${_pc.has(key)?'checked':''}>
+            <span style="color:${ok?'#10b981':'#ef4444'};font-weight:700">${ok?'\u2713':'\u2717'}</span>
+            <span style="font-size:0.78rem">P${t.participant||'N/A'} &middot; ${t.condition||'?'} &middot; ${mc} moves &middot; mess ${ms}${bk}</span></label>`;
+    }).join('');
+    list.querySelectorAll('input[type=checkbox]').forEach((cb) => {
+        cb.addEventListener('change', () => {
+            if (cb.checked) _pc.add(cb.dataset.key); else _pc.delete(cb.dataset.key);
+            const cl2 = document.getElementById('pickerCount'); if (cl2) cl2.textContent = `${_pc.size} selected`;
+        });
+    });
+    const sa = document.getElementById('pickerSelectAll'); if (sa) sa.onclick = () => { _pickerPool().forEach((t) => _pc.add(trialIdKeyV2(t))); _renderPicker(); };
+    const ca = document.getElementById('pickerClearAll'); if (ca) ca.onclick = () => { _pickerPool().forEach((t) => _pc.delete(trialIdKeyV2(t))); _renderPicker(); };
+    const ap = document.getElementById('pickerApply');
+    if (ap) ap.onclick = () => { customPickedKeys = _pc.size > 0 ? new Set(_pc) : null; currentTrialIdx = 0; currentMove = 0; closeTrialPicker(); renderOutcomeFilter(); rebuildTrialSelector(); loadCurrentTrial(); };
+    const rp = document.getElementById('pickerReset');
+    if (rp) rp.onclick = () => { customPickedKeys = null; currentTrialIdx = 0; currentMove = 0; closeTrialPicker(); renderOutcomeFilter(); rebuildTrialSelector(); loadCurrentTrial(); };
+    const ov = document.getElementById('trialPickerModal');
+    if (ov) ov.onclick = (e) => { if (e.target === ov) closeTrialPicker(); };
+    const cb2 = document.getElementById('pickerClose'); if (cb2) cb2.onclick = closeTrialPicker;
+}
+
 async function init() {
     try {
         const response = await fetch('/data/card_analysis_data.json', { cache: 'no-store' });
@@ -184,9 +319,14 @@ async function init() {
     currentTrialIdx = 0;
     currentMove = 0;
     showingFinalState = false;
+    outcomeFilter = 'all';
+    customPickedKeys = null;
     renderStats(dataset.statistics || {});
     setupControls();
     initSelectors();
+    renderOutcomeFilter();
+    const openBtn = document.getElementById('openPickerBtn');
+    if (openBtn) openBtn.addEventListener('click', openTrialPicker);
     rebuildTrialSelector();
     loadCurrentTrial();
     renderGraphs();

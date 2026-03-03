@@ -29,6 +29,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .cell{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}.head{background:linear-gradient(135deg,var(--theme-primary),var(--theme-complementary));color:#fff}
 .empty{background:rgba(255,255,255,.12);border:2px dashed rgba(255,255,255,.3)}.card-cell{background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.25);font-size:18px}
 .card-cell.current{border:3px solid var(--theme-secondary);box-shadow:0 0 20px rgba(251,191,36,.8)}.card-cell.blank{background:var(--blank-color);color:#fff;border:2px solid #757575}
+.card-cell.phase-early{background:#dbeafe;border:2px solid #3b82f6}.card-cell.phase-late{background:#ffedd5;border:2px solid #f97316}
+.card-cell.phase-early.blank{background:#bfdbfe}.card-cell.phase-late.blank{background:#fed7aa}
+.filter-chip{border:1px solid #e2e8f0;border-radius:8px;padding:4px 10px;font-size:0.75rem;font-family:inherit;background:#f8fafc;cursor:pointer}
+.filter-chip:hover{background:#e2e8f0}.filter-chip.active{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-color:transparent}
 .muted{color:var(--text-muted)}.split{display:grid;grid-template-columns:1fr;gap:20px}@media (min-width:1024px){.split{grid-template-columns:1.3fr 1fr}}
 .mode-indicator{text-align:center;padding:10px;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff;border-radius:8px;font-weight:700;margin-bottom:12px;display:none}.mode-indicator.active{display:block}
 body.embed-mode{background:transparent;padding:0;overflow:hidden}body.embed-mode .container{max-width:none;border-radius:16px;box-shadow:none;padding:20px;background:rgba(255,255,255,.95)}
@@ -45,6 +49,8 @@ body.embed-mode .header,body.embed-mode .stats,body.embed-mode .tabs{display:non
 <div class="split"><div><div class="card controls">
 <label for="analysisType">Analysis Type</label><select id="analysisType"></select><p id="analysisText" class="muted"></p>
 <label for="trialSelect">Select Trial</label><select id="trialSelect"></select>
+<div id="outcomeFilter" style="display:flex;flex-wrap:wrap;gap:6px;margin:4px 0"></div>
+<div style="margin:2px 0"><button class="btn secondary" id="openPickerBtn" type="button">Choose Trials&hellip;</button></div>
 <div class="btn-row"><button class="btn final-state" id="finalStateBtn">Show Final State</button></div>
 <div class="btn-row"><button class="btn secondary" id="resetBtn">Reset</button><button class="btn secondary" id="prevBtn">Prev</button><button class="btn primary" id="playBtn">Play</button><button class="btn secondary" id="nextBtn">Next</button></div>
 <label for="speedControl">Speed: <span id="speedLabel">0.8x</span></label><input type="range" id="speedControl" min="150" max="2000" value="800" />
@@ -52,11 +58,33 @@ body.embed-mode .header,body.embed-mode .stats,body.embed-mode .tabs{display:non
 </div>
 <div class="mode-indicator" id="modeIndicator">Showing Final State (Including Blank Cards)</div>
 <div class="grid-wrap"><div id="grid" class="grid"></div></div></div>
-<div><div class="card"><h3>Trial Details</h3><div id="trialInfo" class="muted">Select a trial to view details.</div></div></div></div>
+<div><div class="card"><h3>Trial Details</h3><div id="trialInfo" class="muted">Select a trial to view details.</div>
+<div style="margin-top:12px;font-size:0.78rem;color:#6b7280"><strong style="color:#1f2937">Legend</strong><br>Gold glow = current move<br><span style="color:#3b82f6;font-weight:700">Blue border</span> = early move (Analysis 4)<br><span style="color:#f97316;font-weight:700">Orange border</span> = late move (Analysis 4)</div>
+</div></div></div>
 </section>
 <section id="statistics" class="panel"><div class="card"><h3>Success and Strategy Summary</h3><div id="summaryBar"></div></div><div class="card"><h3>Success Rate by Condition</h3><div id="conditionBar"></div></div><div class="card"><h3>Messiness Deterioration Comparison</h3><div id="messinessBar"></div></div><div class="card"><h3>Move Count Distribution</h3><div id="moveDistBar"></div></div><div class="card"><h3>Blank Card Advantage Analysis</h3><div id="blankCardBar"></div></div><div class="card"><h3>Messiness Distribution by Outcome</h3><div id="messinessBoxBar"></div></div></section>
 </div>
 <script src="/cards-analysis/app.js"></script>
+
+<!-- Trial Picker Modal -->
+<div id="trialPickerModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:16px;padding:20px;width:100%;max-width:700px;max-height:85vh;display:flex;flex-direction:column;gap:10px;box-shadow:0 24px 64px rgba(0,0,0,.3)">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <h3 style="margin:0">Choose Trials</h3>
+      <button id="pickerClose" type="button" style="background:none;border:none;font-size:1.6rem;cursor:pointer;color:#6b7280;line-height:1;padding:0 6px">&times;</button>
+    </div>
+    <div id="pickerFilterBar" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    <input id="pickerSearch" type="text" placeholder="Search participant, condition, outcome&hellip;" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font:inherit;font-size:0.88rem;width:100%" />
+    <p style="margin:0;font-size:0.82rem;color:#6b7280"><span id="pickerCount">0 selected</span> &mdash; check trials to include, then click Apply.</p>
+    <div id="pickerList" style="overflow-y:auto;flex:1;border:1px solid #e2e8f0;border-radius:8px;padding:6px;min-height:160px;max-height:360px"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+      <button id="pickerSelectAll" type="button" class="btn secondary" style="font-size:0.82rem;padding:8px 14px">Select All Visible</button>
+      <button id="pickerClearAll" type="button" class="btn secondary" style="font-size:0.82rem;padding:8px 14px">Clear Visible</button>
+      <button id="pickerReset" type="button" class="btn secondary" style="font-size:0.82rem;padding:8px 14px">Reset to Default</button>
+      <button id="pickerApply" type="button" class="btn primary" style="font-size:0.82rem;padding:8px 14px">Apply</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
 
