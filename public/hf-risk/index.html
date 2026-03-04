@@ -3,235 +3,763 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HF-RISK | Live Research Journal</title>
-  <meta name="description" content="Live GitHub-powered MSc project journal" />
+  <title>HF-RISK | Predicting Heart Failure Outcomes</title>
+  <meta name="description" content="Live MSc research journal — predicting heart failure outcomes with machine learning. Nikunj Prajapati, MSc Data Analytics, London Metropolitan University." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Azeret+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #0d1b2a;
-      --panel: #13263b;
-      --panel-2: #1b324c;
-      --text: #e9f1f8;
-      --muted: #a7bbcc;
-      --border: #2f4a66;
-      --accent: #2a9d8f;
-      --accent-2: #f4a261;
-      --good: #43aa8b;
-      --warn: #e9c46a;
-      --off: #7f93a7;
+      --bg:        #0d1b2a;
+      --panel:     #13263b;
+      --panel-2:   #1b324c;
+      --panel-3:   #152843;
+      --text:      #e9f1f8;
+      --muted:     #8ba4bb;
+      --muted-2:   #6d8fa8;
+      --border:    #2f4a66;
+      --border-2:  #1e3a55;
+      --accent:    #2a9d8f;
+      --accent-2:  #f4a261;
+      --accent-3:  #146c94;
+      --good:      #43aa8b;
+      --warn:      #e9c46a;
+      --danger:    #e76f51;
+      --off:       #7f93a7;
+      --card-glow: rgba(42,157,143,.08);
     }
-    * { box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
     body {
-      margin: 0;
       color: var(--text);
       font-family: "Azeret Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      background: linear-gradient(180deg, #0d1b2a 0%, #10253a 45%, #0f1f31 100%);
+      background:
+        radial-gradient(ellipse 80% 40% at 10% 0%, rgba(20,108,148,.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 30% at 90% 100%, rgba(42,157,143,.12) 0%, transparent 60%),
+        linear-gradient(180deg, #0a1620 0%, #0d1b2a 40%, #0f1f31 100%);
+      min-height: 100vh;
     }
-    .container { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
-    .hero {
-      background: radial-gradient(900px 300px at 20% -20%, rgba(42,157,143,.22), transparent 55%),
-                  radial-gradient(900px 300px at 100% 0%, rgba(244,162,97,.18), transparent 55%),
-                  var(--panel);
+
+    /* ── Layout ─────────────────────────────────────────── */
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 28px 20px 80px; }
+
+    /* ── Section spacing ─────────────────────────────────── */
+    section { margin-top: 22px; }
+
+    /* ── Card base ───────────────────────────────────────── */
+    .card {
+      background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 22px;
+      padding: 22px 22px 22px;
+      position: relative;
+      overflow: hidden;
     }
-    h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 38px); }
-    .sub { color: var(--muted); line-height: 1.6; }
-    .stats { margin-top: 16px; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); }
-    .stat { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
-    .stat .label { color: var(--muted); font-size: 12px; }
-    .stat .value { font-size: 26px; margin-top: 4px; }
-    .progress { margin-top: 14px; }
-    .track { height: 10px; background: #213a53; border-radius: 999px; overflow: hidden; border: 1px solid var(--border); }
-    .fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); width: 0; transition: width .7s ease; }
-    .pct { margin-top: 6px; color: var(--muted); font-size: 12px; }
-    section { margin-top: 18px; }
-    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
-    .card h2 { margin: 0 0 10px; font-size: 20px; }
-    .phase { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--panel-2); margin-top: 10px; }
-    .phase-head { display: flex; gap: 10px; justify-content: space-between; align-items: center; padding: 12px; cursor: pointer; }
-    .phase-title { font-size: 15px; }
-    .badge { font-size: 11px; padding: 4px 8px; border-radius: 999px; border: 1px solid transparent; }
-    .complete { color: var(--good); border-color: rgba(67,170,139,.5); background: rgba(67,170,139,.12); }
-    .in-progress { color: var(--warn); border-color: rgba(233,196,106,.5); background: rgba(233,196,106,.12); }
-    .not-started { color: var(--off); border-color: rgba(127,147,167,.5); background: rgba(127,147,167,.12); }
-    .phase-body { display: none; border-top: 1px solid var(--border); padding: 12px; }
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--card-glow);
+      pointer-events: none;
+      border-radius: inherit;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Hero ────────────────────────────────────────────── */
+    .hero {
+      background:
+        radial-gradient(900px 320px at 10% -10%, rgba(20,108,148,.28) 0%, transparent 55%),
+        radial-gradient(700px 280px at 95% 0%, rgba(42,157,143,.2) 0%, transparent 55%),
+        radial-gradient(600px 200px at 50% 130%, rgba(244,162,97,.1) 0%, transparent 60%),
+        var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 28px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-dots {
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,.04) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+    }
+    .hero-label {
+      font-size: 11px;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--accent-2);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hero-label::before {
+      content: '';
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent-2);
+      box-shadow: 0 0 8px var(--accent-2);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: .5; transform: scale(.8); }
+    }
+    .hero h1 {
+      font-size: clamp(20px, 3.5vw, 34px);
+      font-weight: 600;
+      line-height: 1.25;
+      letter-spacing: -.01em;
+      margin-bottom: 10px;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero-sub {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      max-width: 640px;
+      margin-bottom: 20px;
+    }
+    .stats-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      margin-bottom: 20px;
+    }
+    .stat {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 14px 12px;
+      transition: border-color .2s, transform .2s;
+    }
+    .stat:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .stat .s-label { color: var(--muted); font-size: 11px; margin-bottom: 4px; }
+    .stat .s-val   { font-size: 28px; font-weight: 600; letter-spacing: -.02em; }
+    .progress-bar {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .track {
+      height: 8px;
+      background: rgba(255,255,255,.06);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent) 0%, #20c9b8 50%, var(--accent-2) 100%);
+      border-radius: 999px;
+      width: 0;
+      transition: width .9s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ── About ───────────────────────────────────────────── */
+    .about-grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+    .about-block {
+      background: var(--panel-2);
+      border: 1px solid var(--border-2);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .about-block h3 {
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--accent-2);
+      margin-bottom: 10px;
+    }
+    .about-block p {
+      font-size: 13px;
+      line-height: 1.65;
+      color: #c8d7e5;
+    }
+    .rq-box {
+      background: linear-gradient(135deg, rgba(20,108,148,.15), rgba(42,157,143,.08));
+      border: 1px solid rgba(42,157,143,.3);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 14px;
+      font-size: 13px;
+      line-height: 1.65;
+      color: #c8d7e5;
+    }
+    .rq-box strong { color: var(--accent); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; display: block; margin-bottom: 6px; }
+
+    /* ── Timeline ────────────────────────────────────────── */
+    .phase {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--panel-2);
+      margin-bottom: 10px;
+      transition: border-color .2s;
+    }
+    .phase:hover { border-color: rgba(42,157,143,.4); }
+    .phase-head {
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .phase-num {
+      font-size: 11px;
+      color: var(--muted-2);
+      margin-bottom: 2px;
+      letter-spacing: .08em;
+    }
+    .phase-title  { font-size: 14px; font-weight: 500; }
+    .phase-sub    { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .phase-right  { text-align: right; flex-shrink: 0; }
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+    }
+    .badge.complete    { color: var(--good); border-color: rgba(67,170,139,.4); background: rgba(67,170,139,.1); }
+    .badge.in-progress { color: var(--warn); border-color: rgba(233,196,106,.4); background: rgba(233,196,106,.1); }
+    .badge.not-started { color: var(--off);  border-color: rgba(127,147,167,.3); background: rgba(127,147,167,.07); }
+    .phase-pct { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .phase-body { display: none; border-top: 1px solid var(--border); padding: 14px 16px 16px; }
     .phase-body.open { display: block; }
-    .task { padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; background: #142c43; }
-    .task-row { display: flex; justify-content: space-between; gap: 10px; }
-    .task small { color: var(--muted); }
-    .journal { margin-top: 10px; padding: 10px; border-radius: 10px; border: 1px dashed var(--border); background: #10283f; white-space: pre-wrap; line-height: 1.6; color: #c8d7e5; }
-    .find-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); }
-    .note { color: var(--muted); font-size: 13px; }
+    .tasks-grid {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      margin-bottom: 12px;
+    }
+    .task {
+      background: var(--panel-3);
+      border: 1px solid var(--border-2);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .task .t-row { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+    .task .t-title { font-size: 13px; font-weight: 500; line-height: 1.35; }
+    .task .t-hours { font-size: 11px; color: var(--muted); white-space: nowrap; margin-top: 1px; }
+    .task .t-sum   { font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 2px; }
+    .task .t-status { margin-top: 6px; }
+    .task.complete    { border-left: 3px solid var(--good); }
+    .task.in-progress { border-left: 3px solid var(--warn); }
+    .task.not-started { border-left: 3px solid var(--off); }
+    .journal-box {
+      background: rgba(14, 35, 55, .7);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-top: 10px;
+    }
+    .journal-box .j-label {
+      font-size: 10px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .journal-box .j-entry {
+      font-size: 13px;
+      line-height: 1.7;
+      color: #c8d7e5;
+      white-space: pre-wrap;
+    }
+    .journal-box .j-date { font-size: 11px; color: var(--muted); margin-top: 8px; }
+    .papers-list { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .paper {
+      background: var(--panel-3);
+      border: 1px solid var(--border-2);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .paper .p-cite { font-size: 12px; font-weight: 600; color: #98e2d7; margin-bottom: 4px; }
+    .paper .p-find { font-size: 12px; color: #c8d7e5; line-height: 1.5; }
+    .paper .p-rel  { font-size: 11px; color: var(--accent-2); margin-top: 4px; }
+    .no-journal { font-size: 13px; color: var(--muted); font-style: italic; }
+
+    /* ── Findings ────────────────────────────────────────── */
+    .findings-locked {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 30px 16px;
+      gap: 12px;
+    }
+    .lock-icon { font-size: 36px; opacity: .5; }
+    .findings-locked p { font-size: 13px; color: var(--muted); max-width: 480px; line-height: 1.6; }
+    .findings-locked .lock-count { font-size: 11px; color: var(--muted-2); font-style: italic; }
+    .find-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+    .find-stat { background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+    .find-stat .f-label { font-size: 11px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 6px; }
+    .find-stat .f-val   { font-size: 22px; font-weight: 600; }
+    .find-stat a { color: #98e2d7; text-decoration: none; font-size: 16px; }
+    .find-stat a:hover { text-decoration: underline; }
+    .insight-box {
+      margin-top: 14px;
+      background: linear-gradient(135deg, rgba(42,157,143,.12), rgba(20,108,148,.08));
+      border: 1px solid rgba(42,157,143,.3);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 13px;
+      line-height: 1.65;
+      color: #c8d7e5;
+      white-space: pre-wrap;
+    }
+
+    /* ── Glossary ────────────────────────────────────────── */
+    .glossary-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+    .gterm {
+      background: var(--panel-2);
+      border: 1px solid var(--border-2);
+      border-radius: 12px;
+      padding: 16px;
+      transition: border-color .2s, transform .2s;
+    }
+    .gterm:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .gterm .g-word { font-size: 15px; font-weight: 600; color: var(--accent); margin-bottom: 4px; }
+    .gterm .g-abbr { font-size: 11px; color: var(--accent-2); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 8px; }
+    .gterm .g-def  { font-size: 12px; color: #c0d2e0; line-height: 1.6; }
+    .gterm .g-val  { font-size: 11px; color: var(--muted); margin-top: 8px; border-top: 1px solid var(--border-2); padding-top: 8px; }
+
+    /* ── Clinical Contacts ───────────────────────────────── */
+    .contacts-grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+    .contact-card {
+      background: var(--panel-2);
+      border: 1px solid var(--border-2);
+      border-radius: 14px;
+      padding: 18px;
+    }
+    .contact-card .cc-name   { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+    .contact-card .cc-role   { font-size: 11px; color: var(--accent-2); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px; }
+    .contact-card .cc-desc   { font-size: 12px; color: #c0d2e0; line-height: 1.6; margin-bottom: 10px; }
+    .contact-card .cc-status { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
+    .cc-status.pending   { color: var(--warn); border: 1px solid rgba(233,196,106,.3); background: rgba(233,196,106,.08); }
+    .cc-status.contacted { color: var(--good); border: 1px solid rgba(67,170,139,.3); background: rgba(67,170,139,.08); }
+    .cc-status.scheduled { color: #98e2d7; border: 1px solid rgba(152,226,215,.3); background: rgba(152,226,215,.08); }
+
+    /* ── Footer ──────────────────────────────────────────── */
+    .site-footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: flex-start;
+      color: var(--muted-2);
+      font-size: 11px;
+      line-height: 1.6;
+    }
+    .site-footer a { color: #98e2d7; text-decoration: none; }
+    .site-footer a:hover { text-decoration: underline; }
+    .cite-block { max-width: 600px; }
+    .cite-block .cite-label { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--off); margin-bottom: 4px; }
+
+    /* ── Util ────────────────────────────────────────────── */
     .muted { color: var(--muted); }
-    .footer { margin-top: 20px; color: var(--muted); font-size: 12px; }
-    code { color: #f8dca1; }
+    code  { color: #f8dca1; font-family: inherit; }
+    .pill {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .chevron {
+      display: inline-block;
+      transition: transform .2s;
+      color: var(--muted);
+      font-style: normal;
+      font-size: 14px;
+    }
+    .chevron.down { transform: rotate(180deg); }
+
+    /* ── Source note ─────────────────────────────────────── */
+    .source-note {
+      font-size: 11px;
+      color: var(--off);
+      margin-top: 8px;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="wrap">
+
+    <!-- ① HERO ─────────────────────────────────────────── -->
     <div class="hero">
-      <h1 id="title">HF-RISK Live Journal</h1>
-      <div class="sub" id="tagline">Loading project data...</div>
-      <div class="stats" id="stats"></div>
-      <div class="progress">
+      <div class="hero-dots"></div>
+      <div class="hero-label" id="hero-label">Live MSc Research Journal</div>
+      <h1 id="hero-title"><span>HF‑RISK</span> Loading…</h1>
+      <p class="hero-sub" id="hero-tagline">Loading project data…</p>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div class="progress-bar">
+        <div class="progress-label">
+          <span id="progress-label-left">Project Progress</span>
+          <span id="progress-label-right"></span>
+        </div>
         <div class="track"><div class="fill" id="progress-fill"></div></div>
-        <div class="pct" id="progress-text"></div>
       </div>
-      <div class="note" id="source-note" style="margin-top:10px"></div>
+      <div class="source-note" id="source-note"></div>
     </div>
 
-    <section class="card">
-      <h2>Project Timeline</h2>
-      <div id="phases"></div>
+    <!-- ② ABOUT ─────────────────────────────────────────── -->
+    <section id="sec-about">
+      <div class="card">
+        <div class="card-title">About This Project</div>
+        <div class="about-grid" id="about-grid"></div>
+        <div class="rq-box" id="rq-box" style="display:none">
+          <strong>Research Question</strong>
+          <span id="rq-text"></span>
+        </div>
+      </div>
     </section>
 
-    <section class="card">
-      <h2>Findings</h2>
-      <div id="findings"></div>
+    <!-- ③ TIMELINE ──────────────────────────────────────── -->
+    <section id="sec-timeline">
+      <div class="card">
+        <div class="card-title">Project Timeline</div>
+        <div id="phases"></div>
+      </div>
     </section>
 
-    <section class="card">
-      <h2>How to Use</h2>
-      <div class="note">Default source: <code>./project-data.json</code>. To load from GitHub raw URL, open this page with <code>?dataUrl=https://raw.githubusercontent.com/USERNAME/REPO/main/project-data.json</code>.</div>
+    <!-- ④ FINDINGS ──────────────────────────────────────── -->
+    <section id="sec-findings">
+      <div class="card">
+        <div class="card-title">Findings &amp; Results</div>
+        <div id="findings"></div>
+      </div>
     </section>
 
-    <div class="footer" id="footer"></div>
+    <!-- ⑤ GLOSSARY ──────────────────────────────────────── -->
+    <section id="sec-glossary">
+      <div class="card">
+        <div class="card-title">Clinical Glossary</div>
+        <div class="glossary-grid" id="glossary"></div>
+      </div>
+    </section>
+
+    <!-- ⑥ FOOTER ─────────────────────────────────────────── -->
+    <footer class="site-footer" id="site-footer"></footer>
+
   </div>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const DEFAULT_DATA_URL = './project-data.json';
-    const DATA_URL = params.get('dataUrl') || DEFAULT_DATA_URL;
+    /* ── helpers ────────────────────────────────────────── */
+    const $ = id => document.getElementById(id);
+    const fmt = v => (v === null || v === undefined || v === '') ? 'N/A' : v;
+    const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-    const statusClass = {
-      'complete': 'complete',
-      'in-progress': 'in-progress',
-      'not-started': 'not-started'
-    };
+    /* ── data url ───────────────────────────────────────── */
+    const params   = new URLSearchParams(window.location.search);
+    const DATA_URL = params.get('dataUrl') || './project-data.json';
 
-    function calcProgress(phases) {
-      let total = 0;
+    /* ── progress helpers ───────────────────────────────── */
+    function taskProgress(tasks = []) {
       let done = 0;
-      (phases || []).forEach((p) => {
-        (p.tasks || []).forEach((t) => {
-          total += 1;
-          if (t.status === 'complete') done += 1;
-          if (t.status === 'in-progress') done += 0.5;
-        });
-      });
-      const pct = total ? Math.round((done / total) * 100) : 0;
-      return { total, done, pct };
-    }
-
-    function phaseProgress(phase) {
-      const tasks = phase.tasks || [];
-      if (!tasks.length) return 0;
-      let done = 0;
-      tasks.forEach((t) => {
-        if (t.status === 'complete') done += 1;
+      tasks.forEach(t => {
+        if (t.status === 'complete')    done += 1;
         if (t.status === 'in-progress') done += 0.5;
       });
-      return Math.round((done / tasks.length) * 100);
+      return { done, total: tasks.length, pct: tasks.length ? Math.round((done / tasks.length) * 100) : 0 };
+    }
+    function totalProgress(phases = []) {
+      let done = 0, total = 0;
+      phases.forEach(p => { const r = taskProgress(p.tasks); done += r.done; total += r.total; });
+      const pct = total ? Math.round((done / total) * 100) : 0;
+      return { done, total, pct };
     }
 
-    function fmt(value) {
-      if (value === null || value === undefined || value === '') return 'N/A';
-      return value;
+    /* ── badge html ─────────────────────────────────────── */
+    function badgeHtml(status) {
+      const map = { complete: 'complete', 'in-progress': 'in-progress', 'not-started': 'not-started' };
+      const labels = { complete: '✓ Complete', 'in-progress': '◎ In Progress', 'not-started': '○ Not Started' };
+      const cls = map[status] || 'not-started';
+      return `<span class="badge ${cls}">${labels[status] || status}</span>`;
     }
 
-    function render(data) {
-      const meta = data.meta || {};
+    /* ── RENDER HERO ────────────────────────────────────── */
+    function renderHero(data) {
+      const meta  = data.meta  || {};
       const stats = data.stats || [];
-      const phases = data.phases || [];
-      const findings = data.findings || {};
-
-      document.getElementById('title').textContent = meta.title || 'HF-RISK Live Journal';
-      document.getElementById('tagline').textContent = meta.tagline || 'Research progress and journal entries';
-      document.getElementById('source-note').innerHTML = `Data source: <code>${DATA_URL}</code>`;
-
-      document.getElementById('stats').innerHTML = stats.map((s) => `
+      const uni   = meta.university ? ` · ${meta.university}` : '';
+      $('hero-label').innerHTML = `Live MSc Research Journal${uni}`;
+      $('hero-title').innerHTML = `<span>HF‑RISK</span> ${esc(meta.title || 'Predicting Heart Failure Outcomes')}`;
+      $('hero-tagline').textContent = meta.tagline || '';
+      $('stats-grid').innerHTML = stats.map(s => `
         <div class="stat">
-          <div class="label">${fmt(s.label)}</div>
-          <div class="value">${fmt(s.value)}</div>
+          <div class="s-label">${esc(s.label)}</div>
+          <div class="s-val">${esc(s.value)}</div>
         </div>
       `).join('');
+      const p = totalProgress(data.phases);
+      $('progress-fill').style.width = `${p.pct}%`;
+      $('progress-label-right').textContent = `${p.done}/${p.total} tasks · ${p.pct}%`;
+      $('source-note').innerHTML = `Data — <code>${esc(DATA_URL)}</code>`;
+    }
 
-      const p = calcProgress(phases);
-      document.getElementById('progress-fill').style.width = `${p.pct}%`;
-      document.getElementById('progress-text').textContent = `${p.done}/${p.total} tasks complete (${p.pct}%)`;
+    /* ── RENDER ABOUT ───────────────────────────────────── */
+    function renderAbout(data) {
+      const meta  = data.meta  || {};
+      const about = data.about || [];
+      if (!about.length && !meta.research_question) return;
+      $('about-grid').innerHTML = about.map(block => `
+        <div class="about-block">
+          <h3>${esc(block.heading)}</h3>
+          <p>${esc(block.text)}</p>
+        </div>
+      `).join('');
+      if (meta.research_question) {
+        $('rq-box').style.display = '';
+        $('rq-text').textContent = meta.research_question;
+      }
+    }
 
-      const phasesEl = document.getElementById('phases');
-      phasesEl.innerHTML = phases.map((phase, idx) => {
-        const pct = phaseProgress(phase);
-        const tasksHtml = (phase.tasks || []).map((t) => `
-          <div class="task">
-            <div class="task-row">
-              <strong>${fmt(t.title)}</strong>
-              <small>${fmt(t.hours)}h</small>
+    /* ── RENDER TIMELINE ────────────────────────────────── */
+    function renderTimeline(data) {
+      const phases = data.phases || [];
+      const el = $('phases');
+      el.innerHTML = phases.map((phase, idx) => {
+        const prog = taskProgress(phase.tasks);
+        const isOpen = phase.status !== 'not-started';
+
+        const tasksHtml = (phase.tasks || []).map(t => `
+          <div class="task ${t.status || 'not-started'}">
+            <div class="t-row">
+              <div class="t-title">${esc(t.title)}</div>
+              <div class="t-hours">${fmt(t.hours)}h</div>
             </div>
-            ${t.summary ? `<small>${t.summary}</small>` : ''}
+            ${t.summary ? `<div class="t-sum">${esc(t.summary)}</div>` : ''}
+            <div class="t-status">${badgeHtml(t.status || 'not-started')}</div>
           </div>
         `).join('');
 
-        const journal = phase.journal && phase.journal.written
-          ? `<div class="journal">${fmt(phase.journal.entry)}\n\nDate: ${fmt(phase.journal.date)}</div>`
-          : '<div class="note">Journal entry not published yet.</div>';
+        /* journal */
+        let journalHtml;
+        const j = phase.journal || {};
+        if (j.written && j.entry) {
+          const papersHtml = (j.key_papers || []).length
+            ? `<div class="papers-list">${(j.key_papers).map(p => `
+                <div class="paper">
+                  <div class="p-cite">${esc(p.citation)}</div>
+                  <div class="p-find">${esc(p.finding)}</div>
+                  ${p.relevance ? `<div class="p-rel">${esc(p.relevance)}</div>` : ''}
+                </div>
+              `).join('')}</div>`
+            : '';
+          journalHtml = `
+            <div class="journal-box">
+              <div class="j-label">📓 Phase Journal Entry</div>
+              <div class="j-entry">${esc(j.entry)}</div>
+              <div class="j-date">Written: ${fmt(j.date)}</div>
+              ${papersHtml}
+            </div>
+          `;
+        } else {
+          journalHtml = `<div class="no-journal" style="margin-top:8px">Journal entry not published yet — will appear here when phase is complete.</div>`;
+        }
 
         return `
-          <div class="phase">
-            <div class="phase-head" data-phase="${idx}">
+          <div class="phase" id="phase-${idx}">
+            <div class="phase-head" data-idx="${idx}">
               <div>
-                <div class="phase-title">Phase ${fmt(phase.number)} - ${fmt(phase.title)}</div>
-                <div class="muted">${fmt(phase.subtitle)} | ${fmt(phase.date_range)}</div>
+                <div class="phase-num">Phase ${fmt(phase.number)}</div>
+                <div class="phase-title">${esc(phase.title)}</div>
+                <div class="phase-sub">${esc(phase.subtitle || '')} <span class="muted">·</span> ${esc(phase.date_range || '')}</div>
               </div>
-              <div style="text-align:right">
-                <div class="badge ${statusClass[phase.status] || 'not-started'}">${fmt(phase.status)}</div>
-                <div class="muted" style="font-size:12px;margin-top:4px">${pct}%</div>
+              <div class="phase-right">
+                ${badgeHtml(phase.status || 'not-started')}
+                <div class="phase-pct">${prog.pct}% · ${fmt(phase.date_range)}</div>
+                <i class="chevron ${isOpen ? 'down' : ''}" id="chv-${idx}">⌄</i>
               </div>
             </div>
-            <div class="phase-body ${phase.status !== 'not-started' ? 'open' : ''}">
-              ${tasksHtml || '<div class="note">No tasks yet.</div>'}
-              ${journal}
+            <div class="phase-body ${isOpen ? 'open' : ''}" id="body-${idx}">
+              <div class="tasks-grid">${tasksHtml || '<div class="muted">No tasks yet.</div>'}</div>
+              ${journalHtml}
             </div>
           </div>
         `;
       }).join('');
 
-      document.querySelectorAll('.phase-head').forEach((el) => {
-        el.addEventListener('click', () => {
-          const body = el.nextElementSibling;
+      /* click to toggle */
+      el.querySelectorAll('.phase-head').forEach(head => {
+        head.addEventListener('click', () => {
+          const idx  = head.dataset.idx;
+          const body = $(`body-${idx}`);
+          const chv  = $(`chv-${idx}`);
           body.classList.toggle('open');
+          chv.classList.toggle('down');
         });
       });
-
-      const findingsEl = document.getElementById('findings');
-      if (!findings.published) {
-        findingsEl.innerHTML = '<div class="note">Results are not published yet. This section will update automatically from JSON.</div>';
-      } else {
-        findingsEl.innerHTML = `
-          <div class="find-grid">
-            <div class="stat"><div class="label">Best Model</div><div class="value">${fmt(findings.best_model)}</div></div>
-            <div class="stat"><div class="label">Best AUROC</div><div class="value">${fmt(findings.best_auc)}</div></div>
-            <div class="stat"><div class="label">Tool URL</div><div class="value" style="font-size:14px">${findings.tool_url ? `<a href="${findings.tool_url}" target="_blank" style="color:#98e2d7">Open</a>` : 'N/A'}</div></div>
-          </div>
-          <div class="journal" style="margin-top:10px">${fmt(findings.key_insight)}</div>
-        `;
-      }
-
-      document.getElementById('footer').textContent = `${fmt(meta.student)} | ${fmt(meta.course)} | Started ${fmt(meta.started)} | Target ${fmt(meta.target)}`;
     }
 
+    /* ── RENDER FINDINGS ────────────────────────────────── */
+    function renderFindings(data) {
+      const f  = data.findings || {};
+      const el = $('findings');
+
+      /* count completed tasks */
+      let totalTasks = 0, completedTasks = 0;
+      (data.phases || []).forEach(p => (p.tasks || []).forEach(t => {
+        totalTasks++;
+        if (t.status === 'complete') completedTasks++;
+      }));
+
+      if (!f.published) {
+        el.innerHTML = `
+          <div class="findings-locked">
+            <div class="lock-icon">🔒</div>
+            <p>Research results will be published here automatically when the analysis is complete and the findings have been verified. No action needed — just update <code>project-data.json</code>.</p>
+            <div class="lock-count">${completedTasks}/${totalTasks} project tasks completed before unlock</div>
+          </div>
+        `;
+        return;
+      }
+
+      const toolLink = f.tool_url
+        ? `<a href="${esc(f.tool_url)}" target="_blank" rel="noopener">🔗 Open Tool</a>`
+        : 'Not deployed yet';
+      const topPreds = Array.isArray(f.top_predictors) && f.top_predictors.length
+        ? f.top_predictors.map(p => `<span class="pill">${esc(p)}</span>`).join(' ')
+        : 'N/A';
+
+      el.innerHTML = `
+        <div class="find-grid">
+          <div class="find-stat"><div class="f-label">Best Model</div><div class="f-val">${esc(fmt(f.best_model))}</div></div>
+          <div class="find-stat"><div class="f-label">Best AUROC</div><div class="f-val">${esc(fmt(f.best_auc))}</div></div>
+          <div class="find-stat"><div class="f-label">Benchmark (Chicco)</div><div class="f-val">0.73</div></div>
+          <div class="find-stat"><div class="f-label">Clinical Tool</div><div class="f-val">${toolLink}</div></div>
+        </div>
+        ${topPreds !== 'N/A' ? `<div style="margin-top:12px;"><div class="card-title" style="margin-bottom:8px">Top SHAP Predictors</div>${topPreds}</div>` : ''}
+        ${f.key_insight ? `<div class="insight-box">${esc(f.key_insight)}</div>` : ''}
+      `;
+    }
+
+    /* ── RENDER GLOSSARY ────────────────────────────────── */
+    function renderGlossary(data) {
+      const terms = data.glossary || [];
+      const el = $('glossary');
+      if (!terms.length) {
+        el.closest('section').style.display = 'none';
+        return;
+      }
+      el.innerHTML = terms.map(t => `
+        <div class="gterm">
+          <div class="g-word">${esc(t.term)}</div>
+          ${t.abbr ? `<div class="g-abbr">${esc(t.abbr)}</div>` : ''}
+          <div class="g-def">${esc(t.definition)}</div>
+          ${t.clinical_note ? `<div class="g-val">${esc(t.clinical_note)}</div>` : ''}
+        </div>
+      `).join('');
+    }
+
+    /* ── RENDER FOOTER ──────────────────────────────────── */
+    function renderFooter(data) {
+      const meta = data.meta || {};
+      const cites = data.citations || [];
+      const citesHtml = cites.length
+        ? `<div class="cite-block">
+            <div class="cite-label">Dataset Citations</div>
+            ${cites.map(c => `<div>${esc(c)}</div>`).join('')}
+           </div>`
+        : '';
+      const githubLink = meta.github && meta.github !== 'https://github.com/yourusername/hf-risk'
+        ? `<a href="${esc(meta.github)}" target="_blank" rel="noopener">GitHub ↗</a>`
+        : '';
+      const toolLink = meta.tool_url
+        ? `<a href="${esc(meta.tool_url)}" target="_blank" rel="noopener">Clinical Tool ↗</a>`
+        : '';
+      $('site-footer').innerHTML = `
+        ${citesHtml}
+        <div>
+          <div>${esc(meta.student || '')} · ${esc(meta.id || '')} · ${esc(meta.course || '')}</div>
+          <div>${esc(meta.university || '')} · Started ${fmt(meta.started)} · Target ${fmt(meta.target)}</div>
+          <div style="margin-top:6px;display:flex;gap:14px;">${githubLink}${toolLink}</div>
+        </div>
+      `;
+    }
+
+    /* ── MAIN RENDER ────────────────────────────────────── */
+    function render(data) {
+      renderHero(data);
+      renderAbout(data);
+      renderTimeline(data);
+      renderFindings(data);
+      renderGlossary(data);
+      renderFooter(data);
+    }
+
+    /* ── FETCH + INIT ───────────────────────────────────── */
     async function init() {
       try {
-        const cacheBust = (DATA_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
-        const res = await fetch(DATA_URL + cacheBust);
-        if (!res.ok) throw new Error('Failed to load data');
+        const bust = (DATA_URL.includes('?') ? '&' : '?') + '_t=' + Date.now();
+        const res  = await fetch(DATA_URL + bust);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         render(data);
       } catch (err) {
-        document.getElementById('tagline').textContent = 'Could not load project-data.json';
-        document.getElementById('source-note').innerHTML = `<span style="color:#f4a261">${err.message}</span>`;
+        $('hero-tagline').textContent = 'Could not load project-data.json';
+        $('source-note').innerHTML    = `<span style="color:#f4a261">Error: ${esc(err.message)}</span>`;
+        console.error('HF-RISK data load error:', err);
       }
     }
 

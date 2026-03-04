@@ -1,0 +1,18 @@
+{
+  "28d_death": {
+    "name": "XGBoost",
+    "test_auc": 0.8931
+  },
+  "3m_death": {
+    "name": "XGBoost",
+    "test_auc": 0.9193
+  },
+  "6m_death": {
+    "name": "XGBoost",
+    "test_auc": 0.8186
+  },
+  "6m_readmission": {
+    "name": "Random Forest",
+    "test_auc": 0.6479
+  }
+}

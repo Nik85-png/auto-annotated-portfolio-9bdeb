@@ -22,7 +22,8 @@ const state = {
     speed: 800,
     timer: null,
     outcomeFilter: 'all',
-    customPickedKeys: null
+    customPickedKeys: null,
+    selectedParticipant: 'all'
 };
 
 const MIN_VALID_MOVES = 6;
@@ -186,6 +187,89 @@ function progressionDelta(trial) {
     return spread(late) - spread(early);
 }
 
+function byParticipant(trials) {
+    const groups = new Map();
+    trials.forEach((t) => {
+        const key = String(t.participant || 'N/A');
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(t);
+    });
+    return groups;
+}
+
+function recoveryScoreFromTrials(trials) {
+    const fail = trials.filter((t) => t.outcome !== 'success');
+    const success = trials.filter((t) => t.outcome === 'success');
+    if (!fail.length || !success.length) return Number.NEGATIVE_INFINITY;
+    const worstFailMess = Math.max(...fail.map((t) => messiness(t)));
+    const bestSuccessMess = Math.min(...success.map((t) => messiness(t)));
+    const worstFailMoves = Math.max(...fail.map((t) => numeric(t.move_count)));
+    const bestSuccessMoves = Math.max(...success.map((t) => numeric(t.move_count)));
+    const messinessGain = worstFailMess - bestSuccessMess;
+    const moveGain = Math.max(0, bestSuccessMoves - worstFailMoves);
+    return messinessGain + moveGain * 0.12;
+}
+
+function compareParticipantKeys(a, b) {
+    const an = Number(a);
+    const bn = Number(b);
+    const aNum = Number.isFinite(an);
+    const bNum = Number.isFinite(bn);
+    if (aNum && bNum) return an - bn;
+    return String(a).localeCompare(String(b));
+}
+
+function getRecoveryParticipantMeta(trials) {
+    const groups = byParticipant(trials);
+    const rows = [];
+    groups.forEach((group, participant) => {
+        const hasFail = group.some((t) => t.outcome !== 'success');
+        const hasSuccess = group.some((t) => t.outcome === 'success');
+        rows.push({
+            participant,
+            score: recoveryScoreFromTrials(group),
+            hasBoth: hasFail && hasSuccess,
+            count: group.length
+        });
+    });
+    rows.sort((a, b) => {
+        if (a.hasBoth !== b.hasBoth) return a.hasBoth ? -1 : 1;
+        if (Number.isFinite(a.score) || Number.isFinite(b.score)) return (b.score || 0) - (a.score || 0);
+        return compareParticipantKeys(a.participant, b.participant);
+    });
+    return rows;
+}
+
+function sortTrialsForRecoveryParticipant(trials) {
+    const fail = trials.filter((t) => t.outcome !== 'success');
+    const success = trials.filter((t) => t.outcome === 'success');
+
+    if (fail.length && success.length) {
+        const worstFailMess = Math.max(...fail.map((t) => messiness(t)));
+        const successRanked = [...success].sort((a, b) => {
+            const sa = (worstFailMess - messiness(a)) + numeric(a.move_count) * 0.04;
+            const sb = (worstFailMess - messiness(b)) + numeric(b.move_count) * 0.04;
+            return sb - sa;
+        });
+        const failRanked = [...fail].sort((a, b) => messiness(b) - messiness(a));
+        return [...successRanked, ...failRanked];
+    }
+
+    if (success.length) return [...success].sort((a, b) => messiness(a) - messiness(b));
+    return [...fail].sort((a, b) => messiness(b) - messiness(a));
+}
+
+function sortTrialsForRecovery(trials) {
+    const participantMeta = getRecoveryParticipantMeta(trials);
+    const groups = byParticipant(trials);
+    const ordered = [];
+    participantMeta.forEach((row) => {
+        const group = groups.get(row.participant) || [];
+        ordered.push(...sortTrialsForRecoveryParticipant(group));
+    });
+    return ordered;
+}
+
 function buildAnalysisData(data) {
     const rawAnalyses = Array.isArray(data?.analysis_types) ? data.analysis_types : [];
     const allRaw = rawAnalyses.flatMap((a) => (a.trials || []).map((t) => normalizeTrial(t)));
@@ -255,6 +339,12 @@ function getDisplayTrials() {
     } else {
         pool = currentAnalysis().trials || [];
     }
+    if (currentAnalysis().id === 6) {
+        pool = sortTrialsForRecovery(pool);
+        if (state.selectedParticipant !== 'all') {
+            pool = pool.filter((t) => String(t.participant || 'N/A') === state.selectedParticipant);
+        }
+    }
     if (state.outcomeFilter === 'all') return pool;
     const { cleanMax, messyMin } = messinessThresholds();
     if (state.outcomeFilter === 'success') return pool.filter((t) => t.outcome === 'success');
@@ -285,11 +375,13 @@ function renderAnalysisSelect() {
         state.showingFinalState = false;
         state.outcomeFilter = 'all';
         state.customPickedKeys = null;
+        state.selectedParticipant = 'all';
         stopPlayback();
         $('finalStateBtn').classList.remove('active');
         $('modeIndicator').classList.remove('active');
         renderAnalysisExplanation();
         renderOutcomeFilter();
+        renderParticipantSelect();
         renderTrialSelect();
         renderTrial();
     };
@@ -302,6 +394,13 @@ function renderAnalysisExplanation() {
 function renderOutcomeFilter() {
     const el = $('outcomeFilter');
     if (!el) return;
+    if (currentAnalysis().id === 4) {
+        state.outcomeFilter = 'all';
+        el.style.display = 'none';
+        el.innerHTML = '';
+        return;
+    }
+    el.style.display = 'flex';
     const filters = [
         { key: 'all', label: 'All' },
         { key: 'success', label: 'Success' },
@@ -335,6 +434,58 @@ function renderOutcomeFilter() {
     }
 }
 
+function renderParticipantSelect() {
+    const wrap = $('participantSelectWrap');
+    const select = $('participantSelect');
+    if (!wrap || !select) return;
+
+    const isRecovery = currentAnalysis().id === 6;
+    if (!isRecovery) {
+        wrap.style.display = 'none';
+        select.innerHTML = '';
+        state.selectedParticipant = 'all';
+        return;
+    }
+
+    wrap.style.display = 'block';
+    let pool;
+    if (state.customPickedKeys) {
+        pool = (state.allValidTrials || []).filter((t) => state.customPickedKeys.has(trialIdKey(t)));
+    } else {
+        pool = currentAnalysis().trials || [];
+    }
+
+    const meta = getRecoveryParticipantMeta(pool);
+    const options = [{ value: 'all', label: `All Participants (${meta.length})` }].concat(
+        meta.map((m, idx) => {
+            const scoreTag = Number.isFinite(m.score) ? ` | score ${m.score.toFixed(2)}` : '';
+            const pairTag = m.hasBoth ? ' mixed' : '';
+            return {
+                value: m.participant,
+                label: `#${idx + 1} P${m.participant} (${m.count} trials${pairTag}${scoreTag})`
+            };
+        })
+    );
+
+    if (!options.some((o) => o.value === state.selectedParticipant)) {
+        state.selectedParticipant = 'all';
+    }
+
+    select.innerHTML = options.map((o) => `<option value="${o.value}">${o.label}</option>`).join('');
+    select.value = state.selectedParticipant;
+    select.onchange = () => {
+        state.selectedParticipant = select.value;
+        state.currentTrialIdx = 0;
+        state.currentMoveIdx = 0;
+        state.showingFinalState = false;
+        stopPlayback();
+        $('finalStateBtn').classList.remove('active');
+        $('modeIndicator').classList.remove('active');
+        renderTrialSelect();
+        renderTrial();
+    };
+}
+
 function renderTrialSelect() {
     const select = $('trialSelect');
     const trials = getDisplayTrials();
@@ -349,9 +500,10 @@ function renderTrialSelect() {
         const condition = trial.condition || 'N/A';
         const moves = Number(trial.move_count ?? (trial.moves || []).length);
         const blankTag = (trial.blank_card_count || 0) > 0 || hasBlankInFinal(trial) ? ' [blank]' : '';
+        const recoveryTag = currentAnalysis().id === 6 ? ` | ${trial.outcome === 'success' ? 'RECOVERY' : 'FAILED ATTEMPT'}` : '';
         const opt = document.createElement('option');
         opt.value = String(idx);
-        opt.textContent = `Trial ${idx + 1} [P${participant}] ${outcome} | ${condition} | ${moves} moves${blankTag}`;
+        opt.textContent = `Trial ${idx + 1} [P${participant}] ${outcome} | ${condition} | ${moves} moves${blankTag}${recoveryTag}`;
         select.appendChild(opt);
     });
     select.value = String(state.currentTrialIdx);
@@ -739,24 +891,28 @@ function renderTrialPicker() {
 
     $('pickerApply').onclick = () => {
         state.customPickedKeys = pickerChecked.size ? new Set(pickerChecked) : null;
+        if (currentAnalysis().id === 6) state.selectedParticipant = 'all';
         state.currentTrialIdx = 0;
         state.currentMoveIdx = 0;
         state.showingFinalState = false;
         stopPlayback();
         closeTrialPicker();
         renderOutcomeFilter();
+        renderParticipantSelect();
         renderTrialSelect();
         renderTrial();
     };
 
     $('pickerReset').onclick = () => {
         state.customPickedKeys = null;
+        if (currentAnalysis().id === 6) state.selectedParticipant = 'all';
         state.currentTrialIdx = 0;
         state.currentMoveIdx = 0;
         state.showingFinalState = false;
         stopPlayback();
         closeTrialPicker();
         renderOutcomeFilter();
+        renderParticipantSelect();
         renderTrialSelect();
         renderTrial();
     };
@@ -786,6 +942,7 @@ async function init() {
     renderStats();
     renderAnalysisSelect();
     renderOutcomeFilter();
+    renderParticipantSelect();
     renderTrialSelect();
     renderTrial();
     bindControls();

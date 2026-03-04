@@ -48,6 +48,9 @@ body.embed-mode .header,body.embed-mode .stats,body.embed-mode .tabs{display:non
 <section id="animations" class="panel">
 <div class="split"><div><div class="card controls">
 <label for="analysisType">Analysis Type</label><select id="analysisType"></select><p id="analysisText" class="muted"></p>
+<div id="participantSelectWrap" style="display:none">
+<label for="participantSelect">Participant (Analysis 6)</label><select id="participantSelect"></select>
+</div>
 <label for="trialSelect">Select Trial</label><select id="trialSelect"></select>
 <div id="outcomeFilter" style="display:flex;flex-wrap:wrap;gap:6px;margin:4px 0"></div>
 <div style="margin:2px 0"><button class="btn secondary" id="openPickerBtn" type="button">Choose Trials&hellip;</button></div>
@@ -87,8 +90,6 @@ body.embed-mode .header,body.embed-mode .stats,body.embed-mode .tabs{display:non
 <script src="/cards-analysis/app.js"></script>
 </body>
 </html>
-
-
 
 
 

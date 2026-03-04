@@ -80,6 +80,7 @@ sections:
     showReadMoreLink: true
     variant: variant-b
     projects:
+      - content/pages/projects/hf-risk-journal.md
       - content/pages/projects/cards-project.md
     styles:
       self:

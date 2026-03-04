@@ -5,22 +5,42 @@
     "student": "Nikunj Prajapati",
     "id": "24052351",
     "course": "MSc Data Analytics",
-    "university": "University",
+    "university": "London Metropolitan University",
     "started": "2025-02-20",
     "target": "2025-03-20",
     "dataset": "PhysioNet — Hospitalised Heart Failure Patients",
     "n_patients": 2008,
     "n_variables": 166,
-    "github": "https://github.com/yourusername/hf-risk",
+    "github": "https://github.com/Nik85-png",
     "tool_url": "",
-    "tagline": "Can a machine learning model predict which heart failure patients are most at risk — before they leave the hospital?"
+    "tagline": "Can a machine learning model predict which heart failure patients are most at risk — before they leave the hospital?",
+    "research_question": "Can machine learning models, trained on clinical data available at the point of hospital discharge, accurately predict multi-horizon adverse outcomes in heart failure patients — and can those predictions be made clinically interpretable through explainability methods?"
   },
 
   "stats": [
-    { "label": "Patients in Dataset", "value": "2,008", "icon": "🏥" },
-    { "label": "Clinical Variables", "value": "166", "icon": "🧪" },
-    { "label": "Outcome Timepoints", "value": "4", "icon": "⏱️" },
-    { "label": "Days of Work", "value": "30", "icon": "📅" }
+    { "label": "Patients in Dataset", "value": "2,008" },
+    { "label": "Clinical Variables",  "value": "166"   },
+    { "label": "Outcome Timepoints",  "value": "4"     },
+    { "label": "Days of Work",        "value": "30"    }
+  ],
+
+  "about": [
+    {
+      "heading": "What This Project Is",
+      "text": "This project builds a machine learning tool that predicts which heart failure patients are most at risk of dying or returning to hospital after discharge. It uses a publicly available, anonymised dataset of 2,008 real patients and 166 clinical variables — one of only five such datasets available worldwide."
+    },
+    {
+      "heading": "Why This Matters",
+      "text": "One in three heart failure patients is readmitted within six months of discharge. Often this happens because nobody flagged them as high risk when they left the ward. This tool does that flagging — and explains its reasoning in plain clinical language so a cardiologist can trust it."
+    },
+    {
+      "heading": "What Success Looks Like",
+      "text": "The existing benchmark (Chicco & Jurman, 2020) achieved an AUROC of 0.73 using just 2 clinical variables. This project uses all 166 variables with gradient-boosted models and targets AUROC ≥ 0.80, with SHAP explanations validated by clinical experts."
+    },
+    {
+      "heading": "Four Things We Predict",
+      "text": "Death within 28 days. Death within 3 months. Death within 6 months. Readmission within 6 months. Predicting across all four timepoints gives a complete risk picture — not just a single number — for every patient."
+    }
   ],
 
   "phases": [
@@ -29,7 +49,6 @@
       "number": "01",
       "title": "Foundations & Literature Review",
       "subtitle": "Understanding the clinical world before touching the data",
-      "color": "#c0392b",
       "status": "complete",
       "date_range": "Feb 20 – Feb 27",
       "tasks": [
@@ -91,7 +110,6 @@
       "number": "02",
       "title": "Exploratory Data Analysis",
       "subtitle": "Getting to know 2,008 patients one variable at a time",
-      "color": "#b8860b",
       "status": "in-progress",
       "date_range": "Feb 28 – Mar 4",
       "tasks": [
@@ -137,11 +155,10 @@
       "number": "03",
       "title": "Data Preprocessing & Feature Engineering",
       "subtitle": "Preparing the data the right way — not the easy way",
-      "color": "#2c5f8a",
       "status": "not-started",
       "date_range": "Mar 4 – Mar 8",
       "tasks": [
-        { "id": "t9", "title": "MICE Missing Data Imputation", "status": "not-started", "hours": 3, "summary": "" },
+        { "id": "t9",  "title": "MICE Missing Data Imputation", "status": "not-started", "hours": 3, "summary": "" },
         { "id": "t10", "title": "Feature Engineering (BNP log-transform, clinical composite flags)", "status": "not-started", "hours": 3, "summary": "" },
         { "id": "t11", "title": "Train/Test Split & Cross-Validation Strategy", "status": "not-started", "hours": 1, "summary": "" },
         { "id": "t12", "title": "Class Imbalance Handling (SMOTE + class weights)", "status": "not-started", "hours": 2, "summary": "" }
@@ -154,15 +171,14 @@
       "number": "04",
       "title": "Machine Learning Modelling",
       "subtitle": "Training, comparing, and rigorously evaluating five models",
-      "color": "#6b3fa0",
       "status": "not-started",
       "date_range": "Mar 9 – Mar 14",
       "tasks": [
         { "id": "t13", "title": "Baseline Models — Logistic Regression & Decision Tree", "status": "not-started", "hours": 2, "summary": "" },
-        { "id": "t14", "title": "Advanced Models — Random Forest, XGBoost, LightGBM", "status": "not-started", "hours": 4, "summary": "" },
-        { "id": "t15", "title": "Survival Analysis — Cox Proportional Hazards", "status": "not-started", "hours": 3, "summary": "" },
-        { "id": "t16", "title": "Random Survival Forest", "status": "not-started", "hours": 3, "summary": "" },
-        { "id": "t17", "title": "Model Comparison Table & ROC Curves", "status": "not-started", "hours": 2, "summary": "" }
+        { "id": "t14", "title": "Advanced Models — Random Forest, XGBoost, LightGBM",      "status": "not-started", "hours": 4, "summary": "" },
+        { "id": "t15", "title": "Survival Analysis — Cox Proportional Hazards",            "status": "not-started", "hours": 3, "summary": "" },
+        { "id": "t16", "title": "Random Survival Forest",                                  "status": "not-started", "hours": 3, "summary": "" },
+        { "id": "t17", "title": "Model Comparison Table & ROC Curves",                    "status": "not-started", "hours": 2, "summary": "" }
       ],
       "journal": { "written": false, "date": "", "entry": "", "key_papers": [] }
     },
@@ -172,14 +188,13 @@
       "number": "05",
       "title": "Explainability & Clinical Tool",
       "subtitle": "Making the model speak in a language clinicians understand",
-      "color": "#2a7a6f",
       "status": "not-started",
       "date_range": "Mar 14 – Mar 18",
       "tasks": [
-        { "id": "t18", "title": "SHAP Global Feature Importance Analysis", "status": "not-started", "hours": 3, "summary": "" },
-        { "id": "t19", "title": "Patient-Level SHAP Waterfall Explanations", "status": "not-started", "hours": 2, "summary": "" },
-        { "id": "t20", "title": "Streamlit Risk Prediction Tool (connected to real model)", "status": "not-started", "hours": 4, "summary": "" },
-        { "id": "t21", "title": "Simplified Clinical Risk Scorecard (1-page)", "status": "not-started", "hours": 2, "summary": "" }
+        { "id": "t18", "title": "SHAP Global Feature Importance Analysis",               "status": "not-started", "hours": 3, "summary": "" },
+        { "id": "t19", "title": "Patient-Level SHAP Waterfall Explanations",             "status": "not-started", "hours": 2, "summary": "" },
+        { "id": "t20", "title": "Streamlit Risk Prediction Tool (real model connected)", "status": "not-started", "hours": 4, "summary": "" },
+        { "id": "t21", "title": "Simplified Clinical Risk Scorecard (1-page)",          "status": "not-started", "hours": 2, "summary": "" }
       ],
       "journal": { "written": false, "date": "", "entry": "", "key_papers": [] }
     },
@@ -189,13 +204,13 @@
       "number": "06",
       "title": "Outreach & Dissertation",
       "subtitle": "Taking the work out of the notebook and into the real world",
-      "color": "#2d6a4f",
       "status": "not-started",
       "date_range": "Mar 18 – Mar 20",
       "tasks": [
-        { "id": "t22", "title": "Clinician Outreach — Contact 5–8 cardiologists/HF nurses", "status": "not-started", "hours": 2, "summary": "" },
-        { "id": "t23", "title": "Dissertation First Draft — Methods & Results chapters", "status": "not-started", "hours": 8, "summary": "" },
-        { "id": "t24", "title": "Clinical Expert Feedback Session", "status": "not-started", "hours": 2, "summary": "" }
+        { "id": "t22", "title": "Clinician Outreach — Dr Khaitan (warm contact, Week 1)", "status": "not-started", "hours": 1, "summary": "" },
+        { "id": "t23", "title": "Clinician Outreach — Dr Nadarajah (FIND-HF, Week 4)",   "status": "not-started", "hours": 1, "summary": "" },
+        { "id": "t24", "title": "Dissertation First Draft — Methods & Results chapters",  "status": "not-started", "hours": 8, "summary": "" },
+        { "id": "t25", "title": "Clinical Expert Feedback Session",                       "status": "not-started", "hours": 2, "summary": "" }
       ],
       "journal": { "written": false, "date": "", "entry": "", "key_papers": [] }
     }
@@ -208,5 +223,49 @@
     "top_predictors": [],
     "tool_url": "",
     "key_insight": ""
-  }
+  },
+
+  "glossary": [
+    {
+      "term": "BNP",
+      "abbr": "Brain Natriuretic Peptide",
+      "definition": "A hormone released by the heart muscle when it is under stress or stretched. High levels indicate the heart is struggling to pump effectively. A standard clinical marker for heart failure severity.",
+      "clinical_note": "Dataset range: 2.7–5,000 pg/mL. Clinical danger threshold: >400 pg/mL. Mean in this dataset: ~1,280 pg/mL — the average patient is already in danger territory."
+    },
+    {
+      "term": "LVEF",
+      "abbr": "Left Ventricular Ejection Fraction",
+      "definition": "The percentage of blood pumped out of the left ventricle with each heartbeat. A healthy heart ejects 55–70%. Below 40% is classified as reduced ejection fraction — the heart is too weak.",
+      "clinical_note": "Measured by echocardiogram. Missing in 68% of this dataset because not every patient received a scan. Handling this missing data correctly is a key methodological challenge."
+    },
+    {
+      "term": "NYHA Class",
+      "abbr": "New York Heart Association Classification",
+      "definition": "A four-level scale (I–IV) describing how severely heart failure limits a patient's daily activities. Class I: no limitation. Class IV: symptoms even at rest — the most severe.",
+      "clinical_note": "In this dataset: 52% Class III, 31% Class IV. This is an exceptionally sick cohort, which explains the serious outcomes."
+    },
+    {
+      "term": "AUROC",
+      "abbr": "Area Under the Receiver Operating Characteristic Curve",
+      "definition": "A performance metric for classification models. Ranges from 0.5 (random guessing) to 1.0 (perfect prediction). Measures the model's ability to distinguish between patients who will and will not have a bad outcome.",
+      "clinical_note": "Benchmark (Chicco & Jurman 2020): 0.73. This project targets ≥ 0.80 using 166 variables and gradient-boosted models."
+    },
+    {
+      "term": "SHAP",
+      "abbr": "SHapley Additive exPlanations",
+      "definition": "A method from game theory adapted for machine learning. For every prediction, SHAP calculates exactly how much each variable contributed — making black-box models explainable to clinicians.",
+      "clinical_note": "Produces global summary plots (which variables matter overall) and patient-level waterfall charts (why this specific patient is high risk). Now standard in clinical ML."
+    },
+    {
+      "term": "MICE",
+      "abbr": "Multiple Imputation by Chained Equations",
+      "definition": "A statistical technique for handling missing data. Instead of filling gaps with a simple average, MICE uses all other available variables to intelligently estimate what a missing value most likely was.",
+      "clinical_note": "Used here to handle up to 68% missingness in LVEF and other variables. Far superior to mean imputation, which would distort clinical distributions."
+    }
+  ],
+
+  "citations": [
+    "Zhang, Z., Cao, L., Chen, R. et al. (2021). Electronic healthcare records and external outcome data for hospitalised patients with heart failure. Scientific Data, 8, 46. https://doi.org/10.1038/s41597-021-00835-9",
+    "PhysioNet dataset — Goldberger et al. (2000). PhysioBank, PhysioToolkit, PhysioNet. Circulation, 101(23), e215–e220. https://doi.org/10.1161/01.CIR.101.23.e215"
+  ]
 }

@@ -1,0 +1,22 @@
+{
+  "28d_death": {
+    "display_name": "28-day Mortality",
+    "n": 42990,
+    "positive_cases": 4419,
+    "positive_rate": 10.2791346824843,
+    "external_auc": 0.5509066169394959,
+    "ci_low": 0.5417669586889539,
+    "ci_high": 0.5598109825740097,
+    "internal_auc": 0.8931
+  },
+  "6m_death": {
+    "display_name": "6-month Mortality",
+    "n": 42990,
+    "positive_cases": 9441,
+    "positive_rate": 21.960921144452197,
+    "external_auc": 0.5640543734153152,
+    "ci_low": 0.557053606877243,
+    "ci_high": 0.5710573929912518,
+    "internal_auc": 0.8186
+  }
+}
