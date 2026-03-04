@@ -109,9 +109,13 @@ function renderTrialSelect() {
         const moves = Number(trial.move_count ?? (trial.moves || []).length);
         const blankTag = trial.has_blank_cards ? ' [blank]' : '';
         const recoveryTag = currentAnalysis().id === 6 ? ` | ${trial.outcome === 'success' ? 'RECOVERY' : 'FAILED ATTEMPT'}` : '';
+        const trialNumTag =
+            currentAnalysis().id === 6 && Number.isFinite(Number(trial.trial_number))
+                ? ` | Trial #${Number(trial.trial_number) + 1}`
+                : '';
         const opt = document.createElement('option');
         opt.value = String(idx);
-        opt.textContent = `Trial ${idx + 1} [P${participant}] ${outcome} | ${condition} | ${moves} moves${blankTag}${recoveryTag}`;
+        opt.textContent = `Trial ${idx + 1} [P${participant}] ${outcome} | ${condition}${trialNumTag} | ${moves} moves${blankTag}${recoveryTag}`;
         select.appendChild(opt);
     });
     select.value = String(state.currentTrialIdx);
@@ -362,7 +366,7 @@ function buildAnalysisData(data) {
             .slice(0, 32)
             .map((t) => ({ ...t, moves: t.moves.slice(0, 5), move_count: 5 })),
         // Analysis 6: all trials (fail first so failed → success recovery is front of list)
-        6: sortTrialsForRecovery(validAll),
+        6: sortTrialsForRecovery(nonEmptyRaw),
         7: (() => {
             const sorted = [...valid].sort((a, b) => messiness(a) - messiness(b));
             return [...sorted.slice(0, 6), ...sorted.slice(-6)];
