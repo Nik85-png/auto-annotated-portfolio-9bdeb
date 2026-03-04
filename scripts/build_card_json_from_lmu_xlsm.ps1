@@ -133,7 +133,7 @@ try {
         }
     }
 
-    foreach ($required in @("participant", "condition", "overall_correct", "trialN", "final_card_position_codes_1")) {
+    foreach ($required in @("participant", "condition", "overall_correct", "trialN", "movement_codes", "final_card_position_codes_1")) {
         if (-not $headerIndex.ContainsKey($required)) {
             throw "Required column missing: $required"
         }
@@ -161,13 +161,26 @@ try {
 
         $trialN = As-IntSafe ([string]$data[$r, $headerIndex["trialN"]])
 
+        # Primary move source: movement_codes (ordered list).
+        # Fallback: move_n columns if movement_codes is empty/unusable.
         $moves = @()
-        foreach ($mc in $moveCols) {
-            $tok = [string]$data[$r, $mc.Idx]
-            if ([string]::IsNullOrWhiteSpace($tok)) { continue }
+        $movementCodesRaw = [string]$data[$r, $headerIndex["movement_codes"]]
+        $movementTokens = Parse-TokenList -CellValue $movementCodesRaw
+        foreach ($tok in $movementTokens) {
             $parts = Get-TokenParts -Token $tok
             if ($null -ne $parts) {
                 $moves += $parts
+            }
+        }
+
+        if ($moves.Count -eq 0) {
+            foreach ($mc in $moveCols) {
+                $tok = [string]$data[$r, $mc.Idx]
+                if ([string]::IsNullOrWhiteSpace($tok)) { continue }
+                $parts = Get-TokenParts -Token $tok
+                if ($null -ne $parts) {
+                    $moves += $parts
+                }
             }
         }
 
