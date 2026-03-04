@@ -108,14 +108,18 @@ function renderTrialSelect() {
         const condition = trial.condition || 'N/A';
         const moves = Number(trial.move_count ?? (trial.moves || []).length);
         const blankTag = trial.has_blank_cards ? ' [blank]' : '';
-        const recoveryTag = currentAnalysis().id === 6 ? ` | ${trial.outcome === 'success' ? 'RECOVERY' : 'FAILED ATTEMPT'}` : '';
+        const recoveryTag = currentAnalysis().id === 6 ? ` | ${trial.outcome === 'success' ? 'SUCCESS RECOVERY' : 'FAILED ATTEMPT'}` : '';
         const trialNumTag =
             currentAnalysis().id === 6 && Number.isFinite(Number(trial.trial_number))
                 ? ` | Trial #${Number(trial.trial_number) + 1}`
                 : '';
+        const messinessTag =
+            currentAnalysis().id === 6
+                ? ` | mess ${typeof trial.messiness_score === 'number' ? trial.messiness_score.toFixed(2) : 'N/A'}`
+                : '';
         const opt = document.createElement('option');
         opt.value = String(idx);
-        opt.textContent = `Trial ${idx + 1} [P${participant}] ${outcome} | ${condition}${trialNumTag} | ${moves} moves${blankTag}${recoveryTag}`;
+        opt.textContent = `Trial ${idx + 1} [P${participant}] ${outcome} | ${condition}${trialNumTag} | ${moves} moves${messinessTag}${blankTag}${recoveryTag}`;
         select.appendChild(opt);
     });
     select.value = String(state.currentTrialIdx);
@@ -151,11 +155,10 @@ function renderParticipantSelect() {
     const meta = getRecoveryParticipantMeta(pool);
     const options = [{ value: 'all', label: `All Participants (${meta.length})` }].concat(
         meta.map((m, idx) => {
-            const scoreTag = Number.isFinite(m.score) ? ` | score ${m.score.toFixed(2)}` : '';
             const pairTag = m.hasBoth ? ' mixed' : '';
             return {
                 value: m.participant,
-                label: `#${idx + 1} P${m.participant} (${m.count} trials${pairTag}${scoreTag})`
+                label: `#${idx + 1} P${m.participant} (${m.count} trials${pairTag})`
             };
         })
     );
@@ -336,6 +339,18 @@ function sortTrialsForRecovery(trials) {
         ordered.push(...sortTrialsForRecoveryParticipant(group));
     });
     return ordered;
+}
+
+function sortTrialsByTrialNumber(trials) {
+    return [...trials].sort((a, b) => {
+        const at = Number(a?.trial_number);
+        const bt = Number(b?.trial_number);
+        const aHas = Number.isFinite(at);
+        const bHas = Number.isFinite(bt);
+        if (aHas && bHas) return at - bt;
+        if (aHas !== bHas) return aHas ? -1 : 1;
+        return 0;
+    });
 }
 
 function buildAnalysisData(data) {
@@ -677,9 +692,10 @@ function getDisplayTrials() {
         pool = currentAnalysis().trials || [];
     }
     if (currentAnalysis().id === 6) {
-        pool = sortTrialsForRecovery(pool);
+        pool = sortTrialsByTrialNumber(pool);
         if (state.selectedParticipant !== 'all') {
             pool = pool.filter((t) => String(t.participant || 'N/A') === state.selectedParticipant);
+            pool = sortTrialsByTrialNumber(pool);
         }
     }
     if (state.outcomeFilter === 'all') return pool;
