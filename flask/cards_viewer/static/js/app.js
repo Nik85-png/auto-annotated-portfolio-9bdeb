@@ -339,7 +339,8 @@ function buildAnalysisData(data) {
     const allRaw = rawAnalyses.flatMap((a) => (a.trials || []).map((t) => normalizeTrial(t)));
     const nonEmptyRaw = allRaw.filter((t) => t.moves.length > 0);
     const nonEmpty = dedupeTrials(nonEmptyRaw);
-    const valid = nonEmpty.filter((t) => t.move_count >= MIN_VALID_MOVES);
+    const validAll = nonEmptyRaw.filter((t) => t.move_count >= MIN_VALID_MOVES);
+    const valid = dedupeTrials(validAll);
     const success = valid.filter((t) => t.outcome === 'success');
     const fail = valid.filter((t) => t.outcome !== 'success');
     const repeated = repeatParticipants(nonEmpty);
@@ -361,7 +362,7 @@ function buildAnalysisData(data) {
             .slice(0, 32)
             .map((t) => ({ ...t, moves: t.moves.slice(0, 5), move_count: 5 })),
         // Analysis 6: all trials (fail first so failed → success recovery is front of list)
-        6: sortTrialsForRecovery(valid),
+        6: sortTrialsForRecovery(validAll),
         7: (() => {
             const sorted = [...valid].sort((a, b) => messiness(a) - messiness(b));
             return [...sorted.slice(0, 6), ...sorted.slice(-6)];
@@ -385,7 +386,10 @@ function buildAnalysisData(data) {
         const base = byId[id] || { id, title: `Analysis ${id}`, trials: [] };
         const derived = idToTrials[id] || [];
         const fallback = (base.trials || []).map((t) => normalizeTrial(t)).filter((t) => t.moves.length > 0);
-        const trials = derived.length ? dedupeTrials(derived) : dedupeTrials(fallback);
+        const trials =
+            id === 6
+                ? (derived.length ? derived : fallback)
+                : (derived.length ? dedupeTrials(derived) : dedupeTrials(fallback));
         return {
             ...base,
             ...(analysisDefinitions[id] || {}),
