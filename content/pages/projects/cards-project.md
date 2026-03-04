@@ -28,7 +28,7 @@ Participants used an interactive 8x8 grid to arrange playing cards (Kings, Queen
 
 Core question: what separates successful problem-solvers from those who struggle?
 
-[Open the interactive analysis explorer in a new page](https://auto-annotated-portfolio-9bdeb.onrender.com/play)
+[Open the interactive analysis explorer in a new page](https://auto-annotated-portfolio-9bdeb.onrender.com/)
 
 <a
   href="https://auto-annotated-portfolio-9bdeb.onrender.com/play"
@@ -41,7 +41,7 @@ Core question: what separates successful problem-solvers from those who struggle
 ## Live Interactive Viewer
 
 <iframe
-  src="https://auto-annotated-portfolio-9bdeb.onrender.com/play"
+  src="https://auto-annotated-portfolio-9bdeb.onrender.com/"
   title="Interactive Card Sorting Analysis"
   data-cards-embed="1"
   style="width:100%;min-height:1240px;border:0;border-radius:12px;background:transparent;"
