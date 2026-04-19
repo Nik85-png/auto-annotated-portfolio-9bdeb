@@ -40,7 +40,6 @@
     "ageCat"
   ],
   "feature_cols_after_preprocessing": [
-    "inpatient.number",
     "DestinationDischarge",
     "admission.ward",
     "admission.way",
@@ -181,7 +180,6 @@
     "free.calcium",
     "total.hemoglobin",
     "GCS",
-    "dischargeDay",
     "ageCat",
     "log_creatinine",
     "reduced_ef_flag"

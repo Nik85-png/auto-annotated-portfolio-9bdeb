@@ -13,6 +13,7 @@ st.caption("Proposal objective: clinician-facing prototype with risk outputs and
 
 required_files = [
     os.path.join("outputs", "feature_names.csv"),
+    os.path.join("outputs", "feature_name_map.json"),
     os.path.join("outputs", "outcome_map.json"),
     os.path.join("outputs", "best_models_info.json"),
     os.path.join("outputs", "X_train.csv"),
@@ -24,7 +25,18 @@ if missing:
     st.code("\n".join(missing))
     st.stop()
 
-feature_names = pd.read_csv(os.path.join("outputs", "feature_names.csv"))["feature"].tolist()
+feature_names_df = pd.read_csv(os.path.join("outputs", "feature_names.csv"))
+if "feature" in feature_names_df.columns:
+    feature_names = feature_names_df["feature"].tolist()
+else:
+    feature_names = feature_names_df.iloc[:, 0].tolist()
+
+with open(os.path.join("outputs", "feature_name_map.json"), "r", encoding="utf-8") as f:
+    feature_name_map = json.load(f)
+
+# Models are trained on LightGBM-safe feature names; inputs stay clinician-readable.
+model_feature_names = [feature_name_map.get(feat, feat) for feat in feature_names]
+
 with open(os.path.join("outputs", "outcome_map.json"), "r", encoding="utf-8") as f:
     outcome_map = json.load(f)
 with open(os.path.join("outputs", "best_models_info.json"), "r", encoding="utf-8") as f:
@@ -32,6 +44,11 @@ with open(os.path.join("outputs", "best_models_info.json"), "r", encoding="utf-8
 
 X_train = pd.read_csv(os.path.join("outputs", "X_train.csv"))
 feature_defaults = X_train.median(numeric_only=True).to_dict()
+
+st.warning(
+    "Research/testing prototype only. This tool has not been clinically validated "
+    "and must not be used to make patient-care decisions."
+)
 
 st.subheader("Patient Inputs")
 st.write("Provide available values. Leave unknown values as defaults.")
@@ -46,6 +63,7 @@ with st.form("risk_form"):
 
 if submit:
     x = pd.DataFrame([user_values], columns=feature_names)
+    x_model = x.rename(columns=feature_name_map).reindex(columns=model_feature_names)
     st.subheader("Predictions")
     rows = []
 
@@ -53,7 +71,7 @@ if submit:
         model_path = os.path.join("models", f"best_model_{label}.pkl")
         if os.path.exists(model_path):
             model = joblib.load(model_path)
-            prob = float(model.predict_proba(x)[:, 1][0])
+            prob = float(model.predict_proba(x_model)[:, 1][0])
             rows.append(
                 {
                     "outcome_label": label,

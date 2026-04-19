@@ -1,5 +1,4 @@
 feature
-inpatient.number
 DestinationDischarge
 admission.ward
 admission.way
@@ -140,7 +139,6 @@ anion.gap
 free.calcium
 total.hemoglobin
 GCS
-dischargeDay
 ageCat
 log_creatinine
 reduced_ef_flag

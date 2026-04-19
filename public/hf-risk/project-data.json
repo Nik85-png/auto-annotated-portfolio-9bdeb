@@ -1,48 +1,57 @@
 {
   "meta": {
     "title": "Predicting Heart Failure Outcomes with Machine Learning",
-    "subtitle": "An MSc Research Journal",
+    "subtitle": "Final MSc Research Summary",
     "student": "Nikunj Prajapati",
     "id": "24052351",
     "course": "MSc Data Analytics",
     "university": "London Metropolitan University",
     "started": "2025-02-20",
     "target": "2025-03-20",
-    "dataset": "PhysioNet — Hospitalised Heart Failure Patients",
+    "dataset": "PhysioNet Zhang HF cohort + MIMIC-IV external validation",
     "n_patients": 2008,
-    "n_variables": 166,
+    "n_variables": 143,
     "github": "https://github.com/Nik85-png",
     "tool_url": "",
-    "tagline": "Can a machine learning model predict which heart failure patients are most at risk — before they leave the hospital?",
-    "research_question": "Can machine learning models, trained on clinical data available at the point of hospital discharge, accurately predict multi-horizon adverse outcomes in heart failure patients — and can those predictions be made clinically interpretable through explainability methods?"
+    "tagline": "A leakage-clean machine learning study predicting heart failure outcomes and testing transportability on MIMIC-IV.",
+    "research_question": "Can machine learning models trained on discharge-time clinical data predict adverse outcomes after heart failure hospitalisation, and how well do those models generalise to an external MIMIC-IV cohort?"
   },
-
   "stats": [
-    { "label": "Patients in Dataset", "value": "2,008" },
-    { "label": "Clinical Variables",  "value": "166"   },
-    { "label": "Outcome Timepoints",  "value": "4"     },
-    { "label": "Days of Work",        "value": "30"    }
+    {
+      "label": "Zhang Patients",
+      "value": "2,008"
+    },
+    {
+      "label": "Final Predictors",
+      "value": "143"
+    },
+    {
+      "label": "MIMIC-IV Patients",
+      "value": "42,990"
+    },
+    {
+      "label": "Analysis Scripts",
+      "value": "10"
+    }
   ],
-
   "about": [
     {
       "heading": "What This Project Is",
-      "text": "This project builds a machine learning tool that predicts which heart failure patients are most at risk of dying or returning to hospital after discharge. It uses a publicly available, anonymised dataset of 2,008 real patients and 166 clinical variables — one of only five such datasets available worldwide."
+      "text": "HF-RISK is an MSc Data Analytics project that predicts death and readmission after hospitalisation for heart failure using machine learning models trained on the Zhang / PhysioNet cohort."
     },
     {
-      "heading": "Why This Matters",
-      "text": "One in three heart failure patients is readmitted within six months of discharge. Often this happens because nobody flagged them as high risk when they left the ward. This tool does that flagging — and explains its reasoning in plain clinical language so a cardiologist can trust it."
+      "heading": "Why Strict Cleaning Matters",
+      "text": "The final pipeline removes patient identifiers, discharge timing, and post-outcome leakage variables. This lowers headline AUROC but makes the results methodologically defensible."
     },
     {
-      "heading": "What Success Looks Like",
-      "text": "The existing benchmark (Chicco & Jurman, 2020) achieved an AUROC of 0.73 using just 2 clinical variables. This project uses all 166 variables with gradient-boosted models and targets AUROC ≥ 0.80, with SHAP explanations validated by clinical experts."
+      "heading": "Main Internal Result",
+      "text": "After strict leakage removal, the primary 6-month mortality model remained XGBoost and achieved an internal test AUROC of 0.7098 on the held-out Zhang test set."
     },
     {
-      "heading": "Four Things We Predict",
-      "text": "Death within 28 days. Death within 3 months. Death within 6 months. Readmission within 6 months. Predicting across all four timepoints gives a complete risk picture — not just a single number — for every patient."
+      "heading": "External Validation",
+      "text": "The Zhang-trained models were applied directly to MIMIC-IV without retraining. Six-month mortality external AUROC was 0.5995, showing limited transportability and clear dataset shift."
     }
   ],
-
   "phases": [
     {
       "id": "phase-1",
@@ -104,13 +113,12 @@
         ]
       }
     },
-
     {
       "id": "phase-2",
       "number": "02",
       "title": "Exploratory Data Analysis",
       "subtitle": "Getting to know 2,008 patients one variable at a time",
-      "status": "in-progress",
+      "status": "complete",
       "date_range": "Feb 28 – Mar 4",
       "tasks": [
         {
@@ -130,15 +138,154 @@
         {
           "id": "t7",
           "title": "Clinical Feature Visualisations",
-          "status": "in-progress",
+          "status": "complete",
           "hours": 4,
           "summary": "Producing distribution plots, BNP by outcome violin plots, NYHA vs mortality bar charts, Kaplan-Meier survival curves by NYHA class."
         },
         {
           "id": "t8",
           "title": "Table 1 — Patient Characteristics Summary",
-          "status": "not-started",
+          "status": "complete",
           "hours": 1.5,
+          "summary": "Generated patient characteristics summary table for dissertation reporting."
+        }
+      ],
+      "journal": {
+        "written": false,
+        "date": "",
+        "entry": "",
+        "key_papers": []
+      }
+    },
+    {
+      "id": "phase-3",
+      "number": "03",
+      "title": "Data Preprocessing & Feature Engineering",
+      "subtitle": "Preparing the data the right way — not the easy way",
+      "status": "complete",
+      "date_range": "Mar 4 – Mar 8",
+      "tasks": [
+        {
+          "id": "t9",
+          "title": "MICE Missing Data Imputation",
+          "status": "complete",
+          "hours": 3,
+          "summary": "Applied three-tier missing data strategy including MICE for 42 moderate-missingness variables."
+        },
+        {
+          "id": "t10",
+          "title": "Feature Engineering (BNP log-transform, clinical composite flags)",
+          "status": "complete",
+          "hours": 3,
+          "summary": "Engineered clinically motivated BNP, creatinine, renal risk, reduced EF, and age features."
+        },
+        {
+          "id": "t11",
+          "title": "Train/Test Split & Cross-Validation Strategy",
+          "status": "complete",
+          "hours": 1,
+          "summary": "Created final 80/20 train-test split with 143 leakage-clean predictors."
+        },
+        {
+          "id": "t12",
+          "title": "Class Imbalance Handling (SMOTE + class weights)",
+          "status": "complete",
+          "hours": 2,
+          "summary": "Applied SMOTE only within model training/CV for highly imbalanced mortality outcomes."
+        }
+      ],
+      "journal": {
+        "written": false,
+        "date": "",
+        "entry": "",
+        "key_papers": []
+      }
+    },
+    {
+      "id": "phase-4",
+      "number": "04",
+      "title": "Machine Learning Modelling",
+      "subtitle": "Training, comparing, and rigorously evaluating five models",
+      "status": "complete",
+      "date_range": "Mar 9 – Mar 14",
+      "tasks": [
+        {
+          "id": "t13",
+          "title": "Baseline Models — Logistic Regression & Decision Tree",
+          "status": "complete",
+          "hours": 2,
+          "summary": "Trained baseline logistic regression and decision tree models."
+        },
+        {
+          "id": "t14",
+          "title": "Advanced Models — Random Forest, XGBoost, LightGBM",
+          "status": "complete",
+          "hours": 4,
+          "summary": "Trained Random Forest, XGBoost, and LightGBM models across four outcomes."
+        },
+        {
+          "id": "t15",
+          "title": "Survival Analysis — Cox Proportional Hazards",
+          "status": "complete",
+          "hours": 3,
+          "summary": "Generated Kaplan-Meier and Cox proportional hazards survival analysis outputs."
+        },
+        {
+          "id": "t16",
+          "title": "Random Survival Forest",
+          "status": "complete",
+          "hours": 3,
+          "summary": "Trained Random Survival Forest model for complementary survival modelling."
+        },
+        {
+          "id": "t17",
+          "title": "Model Comparison Table & ROC Curves",
+          "status": "complete",
+          "hours": 2,
+          "summary": "Generated final model comparison table, ROC curves, and AUROC heatmap."
+        }
+      ],
+      "journal": {
+        "written": false,
+        "date": "",
+        "entry": "",
+        "key_papers": []
+      }
+    },
+    {
+      "id": "phase-5",
+      "number": "05",
+      "title": "Explainability & Clinical Tool",
+      "subtitle": "Making the model speak in a language clinicians understand",
+      "status": "complete",
+      "date_range": "Mar 14 – Mar 18",
+      "tasks": [
+        {
+          "id": "t18",
+          "title": "SHAP Global Feature Importance Analysis",
+          "status": "complete",
+          "hours": 3,
+          "summary": "Generated final SHAP global feature importance outputs after strict leakage removal."
+        },
+        {
+          "id": "t19",
+          "title": "Patient-Level SHAP Waterfall Explanations",
+          "status": "complete",
+          "hours": 2,
+          "summary": "Generated patient-level SHAP waterfall plots for high-risk and low-risk examples."
+        },
+        {
+          "id": "t20",
+          "title": "Streamlit Risk Prediction Tool (real model connected)",
+          "status": "complete",
+          "hours": 4,
+          "summary": "Connected Streamlit prototype to final saved models with feature-name mapping and research-use warning."
+        },
+        {
+          "id": "t21",
+          "title": "Simplified Clinical Risk Scorecard (1-page)",
+          "status": "not-started",
+          "hours": 2,
           "summary": ""
         }
       ],
@@ -149,56 +296,6 @@
         "key_papers": []
       }
     },
-
-    {
-      "id": "phase-3",
-      "number": "03",
-      "title": "Data Preprocessing & Feature Engineering",
-      "subtitle": "Preparing the data the right way — not the easy way",
-      "status": "not-started",
-      "date_range": "Mar 4 – Mar 8",
-      "tasks": [
-        { "id": "t9",  "title": "MICE Missing Data Imputation", "status": "not-started", "hours": 3, "summary": "" },
-        { "id": "t10", "title": "Feature Engineering (BNP log-transform, clinical composite flags)", "status": "not-started", "hours": 3, "summary": "" },
-        { "id": "t11", "title": "Train/Test Split & Cross-Validation Strategy", "status": "not-started", "hours": 1, "summary": "" },
-        { "id": "t12", "title": "Class Imbalance Handling (SMOTE + class weights)", "status": "not-started", "hours": 2, "summary": "" }
-      ],
-      "journal": { "written": false, "date": "", "entry": "", "key_papers": [] }
-    },
-
-    {
-      "id": "phase-4",
-      "number": "04",
-      "title": "Machine Learning Modelling",
-      "subtitle": "Training, comparing, and rigorously evaluating five models",
-      "status": "not-started",
-      "date_range": "Mar 9 – Mar 14",
-      "tasks": [
-        { "id": "t13", "title": "Baseline Models — Logistic Regression & Decision Tree", "status": "not-started", "hours": 2, "summary": "" },
-        { "id": "t14", "title": "Advanced Models — Random Forest, XGBoost, LightGBM",      "status": "not-started", "hours": 4, "summary": "" },
-        { "id": "t15", "title": "Survival Analysis — Cox Proportional Hazards",            "status": "not-started", "hours": 3, "summary": "" },
-        { "id": "t16", "title": "Random Survival Forest",                                  "status": "not-started", "hours": 3, "summary": "" },
-        { "id": "t17", "title": "Model Comparison Table & ROC Curves",                    "status": "not-started", "hours": 2, "summary": "" }
-      ],
-      "journal": { "written": false, "date": "", "entry": "", "key_papers": [] }
-    },
-
-    {
-      "id": "phase-5",
-      "number": "05",
-      "title": "Explainability & Clinical Tool",
-      "subtitle": "Making the model speak in a language clinicians understand",
-      "status": "not-started",
-      "date_range": "Mar 14 – Mar 18",
-      "tasks": [
-        { "id": "t18", "title": "SHAP Global Feature Importance Analysis",               "status": "not-started", "hours": 3, "summary": "" },
-        { "id": "t19", "title": "Patient-Level SHAP Waterfall Explanations",             "status": "not-started", "hours": 2, "summary": "" },
-        { "id": "t20", "title": "Streamlit Risk Prediction Tool (real model connected)", "status": "not-started", "hours": 4, "summary": "" },
-        { "id": "t21", "title": "Simplified Clinical Risk Scorecard (1-page)",          "status": "not-started", "hours": 2, "summary": "" }
-      ],
-      "journal": { "written": false, "date": "", "entry": "", "key_papers": [] }
-    },
-
     {
       "id": "phase-6",
       "number": "06",
@@ -207,24 +304,62 @@
       "status": "not-started",
       "date_range": "Mar 18 – Mar 20",
       "tasks": [
-        { "id": "t22", "title": "Clinician Outreach — Dr Khaitan (warm contact, Week 1)", "status": "not-started", "hours": 1, "summary": "" },
-        { "id": "t23", "title": "Clinician Outreach — Dr Nadarajah (FIND-HF, Week 4)",   "status": "not-started", "hours": 1, "summary": "" },
-        { "id": "t24", "title": "Dissertation First Draft — Methods & Results chapters",  "status": "not-started", "hours": 8, "summary": "" },
-        { "id": "t25", "title": "Clinical Expert Feedback Session",                       "status": "not-started", "hours": 2, "summary": "" }
+        {
+          "id": "t22",
+          "title": "Clinician Outreach — Dr Khaitan (warm contact, Week 1)",
+          "status": "not-started",
+          "hours": 1,
+          "summary": ""
+        },
+        {
+          "id": "t23",
+          "title": "Clinician Outreach — Dr Nadarajah (FIND-HF, Week 4)",
+          "status": "not-started",
+          "hours": 1,
+          "summary": ""
+        },
+        {
+          "id": "t24",
+          "title": "Dissertation First Draft — Methods & Results chapters",
+          "status": "not-started",
+          "hours": 8,
+          "summary": ""
+        },
+        {
+          "id": "t25",
+          "title": "Clinical Expert Feedback Session",
+          "status": "not-started",
+          "hours": 2,
+          "summary": ""
+        }
       ],
-      "journal": { "written": false, "date": "", "entry": "", "key_papers": [] }
+      "journal": {
+        "written": false,
+        "date": "",
+        "entry": "",
+        "key_papers": []
+      }
     }
   ],
-
   "findings": {
-    "published": false,
-    "best_model": "",
-    "best_auc": null,
-    "top_predictors": [],
+    "published": true,
+    "best_model": "Random Forest / XGBoost (horizon-specific)",
+    "best_auc": 0.8392,
+    "top_predictors": [
+      "GCS",
+      "Moderate-to-severe CKD",
+      "Mitral valve AMS",
+      "LV end-diastolic diameter",
+      "Liver disease",
+      "Congestive heart failure",
+      "Eye opening",
+      "Reduced EF flag",
+      "Basophil ratio",
+      "Creatine kinase"
+    ],
     "tool_url": "",
-    "key_insight": ""
+    "key_insight": "Early models achieved higher AUROC and appeared competitive with several published benchmarks, but audit checks identified administrative, temporal, and post-outcome proxy variables. After removing these, the final leakage-clean model reported more conservative but defensible performance: 6-month mortality AUROC 0.7098 internally and 0.5995 on MIMIC-IV external validation."
   },
-
   "glossary": [
     {
       "term": "BNP",
@@ -263,9 +398,50 @@
       "clinical_note": "Used here to handle up to 68% missingness in LVEF and other variables. Far superior to mean imputation, which would distort clinical distributions."
     }
   ],
-
   "citations": [
     "Zhang, Z., Cao, L., Chen, R. et al. (2021). Electronic healthcare records and external outcome data for hospitalised patients with heart failure. Scientific Data, 8, 46. https://doi.org/10.1038/s41597-021-00835-9",
     "PhysioNet dataset — Goldberger et al. (2000). PhysioBank, PhysioToolkit, PhysioNet. Circulation, 101(23), e215–e220. https://doi.org/10.1161/01.CIR.101.23.e215"
-  ]
+  ],
+  "final_results": {
+    "feature_count": 143,
+    "internal_auroc": {
+      "28d_death": {
+        "model": "Random Forest",
+        "auroc": 0.7811
+      },
+      "3m_death": {
+        "model": "Random Forest",
+        "auroc": 0.8392
+      },
+      "6m_death": {
+        "model": "XGBoost",
+        "auroc": 0.7098
+      },
+      "6m_readmission": {
+        "model": "XGBoost",
+        "auroc": 0.6497
+      }
+    },
+    "external_auroc": {
+      "28d_death_mimic": 0.5235,
+      "6m_death_mimic": 0.5995
+    },
+    "calibration": {
+      "6m_death": {
+        "brier": 0.0268,
+        "ece": 0.0227
+      },
+      "28d_death": {
+        "brier": 0.0164,
+        "ece": 0.0353
+      }
+    },
+    "research_warning": "Research prototype only. Not clinically validated and not for patient-care decisions.",
+    "audit_note": {
+      "before_audit": "Earlier models produced higher headline AUROC and appeared to beat multiple benchmarks.",
+      "audit_action": "Removed patient ID, discharge timing, and post-outcome proxy variables from predictors.",
+      "after_audit": "Final strict 6-month mortality AUROC was 0.7098 internally and 0.5995 on MIMIC-IV.",
+      "interpretation": "Reduced AUROC is presented as methodological integrity rather than model failure."
+    }
+  }
 }

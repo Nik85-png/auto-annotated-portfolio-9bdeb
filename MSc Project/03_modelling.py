@@ -92,17 +92,17 @@ MODELS = {
         max_depth=6, class_weight='balanced', random_state=42),
     'Random Forest': RandomForestClassifier(
         n_estimators=200, max_depth=None, class_weight='balanced',
-        n_jobs=-1, random_state=42),
+        n_jobs=1, random_state=42),
     'XGBoost': XGBClassifier(
         n_estimators=200, learning_rate=0.05, max_depth=6,
         subsample=0.8, colsample_bytree=0.8,
         use_label_encoder=False, eval_metric='logloss',
-        n_jobs=-1, random_state=42, verbosity=0),
+        n_jobs=1, random_state=42, verbosity=0),
     'LightGBM': LGBMClassifier(
         n_estimators=200, learning_rate=0.05, max_depth=6,
         subsample=0.8, colsample_bytree=0.8,
         class_weight='balanced',
-        n_jobs=-1, random_state=42, verbose=-1),
+        n_jobs=1, random_state=42, verbose=-1),
 }
 
 # Determine if SMOTE is needed (only for very imbalanced targets, i.e. <10% positive)
@@ -162,7 +162,7 @@ for outcome_label, outcome_col in OUTCOME_MAP.items():
         # 5-fold CV
         cv_results = cross_validate(
             model, X_train, y_tr, cv=CV,
-            scoring=scoring, n_jobs=-1, return_train_score=False
+            scoring=scoring, n_jobs=1, return_train_score=False
         )
 
         mean_auc  = cv_results['test_auroc'].mean()

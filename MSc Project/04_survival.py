@@ -256,7 +256,7 @@ if SKSURV_OK:
         min_samples_split=10,
         min_samples_leaf=5,
         max_features="sqrt",
-        n_jobs=-1,
+        n_jobs=1,
         random_state=42,
     )
     rsf.fit(X_tr, y_tr)

@@ -172,6 +172,8 @@ print(f"Shape after feature engineering: {df.shape}")
 
 # Remove leakage columns - these contain post-discharge outcome information
 LEAKAGE_COLS = [
+    "inpatient.number",
+    "dischargeDay",
     "outcome.during.hospitalization",
     "re.admission.within.28.days",
     "re.admission.within.3.months",

@@ -1,5 +1,4 @@
 {
-  "inpatient.number": "inpatient_number",
   "DestinationDischarge": "DestinationDischarge",
   "admission.ward": "admission_ward",
   "admission.way": "admission_way",
@@ -140,7 +139,6 @@
   "free.calcium": "free_calcium",
   "total.hemoglobin": "total_hemoglobin",
   "GCS": "GCS",
-  "dischargeDay": "dischargeDay",
   "ageCat": "ageCat",
   "log_creatinine": "log_creatinine",
   "reduced_ef_flag": "reduced_ef_flag"
