@@ -2,63 +2,69 @@
 type: ProjectLayout
 title: HF-RISK — Predicting Heart Failure Outcomes with Machine Learning
 metaTitle: HF-RISK — Heart Failure Outcome Prediction | MSc Research
-metaDescription: A live MSc research journal building a machine learning tool to predict death and readmission risk in 2,008 heart failure patients — with SHAP explainability and a deployable clinical tool.
+metaDescription: Final MSc Data Analytics project using leakage-clean machine learning to predict heart failure outcomes, explain predictions with SHAP, and test external validation on MIMIC-IV.
 socialImage: /images/featured-Image2.jpg
 colors: colors-a
 date: '2026-02-21'
 client: London Metropolitan University
 description: >-
-  A live research journal tracking an MSc project that builds a multi-horizon
-  heart failure outcome predictor using 166 clinical variables, SHAP explainability,
-  and a deployable Streamlit risk tool.
+  Final MSc project building leakage-clean heart failure outcome prediction
+  models using 143 clinical predictors, SHAP explainability, MIMIC-IV external
+  validation, and a Streamlit research prototype.
 featuredImage:
   type: ImageBlock
   url: /images/featured-Image2.jpg
-  altText: HF-RISK heart failure risk prediction research journal
+  altText: HF-RISK heart failure risk prediction research project
 media:
   type: ImageBlock
   url: /images/featured-Image2.jpg
-  altText: HF-RISK research journal
+  altText: HF-RISK final MSc project page
 ---
 
 ## Project Overview
 
-**HF-RISK** is an MSc Data Analytics research project building a machine learning system that predicts adverse outcomes — death and hospital readmission — at four timepoints after discharge for heart failure patients.
+**HF-RISK** is my MSc Data Analytics project on machine learning for heart failure outcome prediction. It predicts adverse outcomes after discharge, explains the model using SHAP, and tests whether models trained on one hospital cohort transfer to MIMIC-IV.
 
-The dataset contains **2,008 real patients** and **166 clinical variables** from Zigong Fourth People's Hospital, published by Zhang et al. in *Scientific Data* (Nature, 2021).
+The final pipeline uses **2,008 patients** from the Zhang / PhysioNet heart failure cohort and a strict leakage-clean feature set of **143 predictors**. Administrative IDs, discharge timing, and post-outcome proxy variables were removed after audit checks.
 
-[Open the full live journal ↗](/hf-risk/index.html)
+[Open the full HF-RISK project page ->](/hf-risk/index.html)
 
-## Live Research Journal
+## Final Project Page
 
 <iframe
   src="/hf-risk/index.html"
-  title="HF-RISK Live Journal"
+  title="HF-RISK Final MSc Project Page"
   style="width:100%;min-height:1400px;border:0;border-radius:14px;background:transparent;"
   loading="lazy"
 ></iframe>
 
-## What Is Being Built
+## What Was Built
 
 | Component | Description |
 |---|---|
-| **EDA** | Missingness maps, BNP distributions, NYHA outcome charts |
-| **ML Models** | Logistic Regression, Random Forest, XGBoost, LightGBM |
-| **Survival Models** | Cox Proportional Hazards + Random Survival Forest |
-| **Explainability** | SHAP global feature importance + patient waterfall plots |
-| **Clinical Tool** | Streamlit app — enter patient values, get risk score |
+| **EDA** | Missingness maps, class balance, BNP/LVEF/NYHA summaries, and patient characteristics |
+| **Leakage audit** | Removed patient ID, discharge timing, and post-outcome proxy variables before final modelling |
+| **ML Models** | Logistic Regression, Decision Tree, Random Forest, XGBoost, and LightGBM across four outcomes |
+| **Survival Models** | Kaplan-Meier, Cox Proportional Hazards, and Random Survival Forest |
+| **Explainability** | SHAP global importance, beeswarm plots, and patient-level waterfall plots |
+| **External validation** | Zhang-trained models tested directly on MIMIC-IV without retraining |
+| **Research Tool** | Streamlit prototype for testing only, not for clinical decision-making |
 
-## How the Journal Updates
+## Final Results Snapshot
 
-The page above reads `project-data.json`. To publish a progress update:
+| Outcome | Final best model | Held-out test AUROC |
+|---|---:|---:|
+| 28-day mortality | Random Forest | 0.781 |
+| 3-month mortality | Random Forest | 0.839 |
+| 6-month mortality | XGBoost | 0.710 |
+| 6-month readmission | XGBoost | 0.650 |
 
-1. Edit `project-data.json` — change a task status or add a journal entry
-2. Push the change to GitHub
-3. The live page updates automatically within seconds
+External validation on MIMIC-IV produced AUROC **0.524** for 28-day mortality and **0.599** for 6-month mortality, highlighting dataset shift and limited model transportability across healthcare systems.
 
-No coding, no rebuilding. Just a JSON edit.
+The project deliberately reports the stricter leakage-clean results rather than the highest early AUROC, because the final model is methodologically more defensible.
 
 ## Dataset & Citations
 
 - Zhang, Z. et al. (2021). Electronic healthcare records and external outcome data for hospitalised patients with heart failure. *Scientific Data*, 8, 46.
+- Johnson, A. et al. MIMIC-IV. PhysioNet.
 - Chicco, D. & Jurman, G. (2020). Machine learning can predict survival of patients with heart failure. *BMC Medical Informatics and Decision Making*, 20, 16.

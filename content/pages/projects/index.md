@@ -2,7 +2,7 @@
 type: ProjectFeedLayout
 title: Projects
 metaTitle: Projects
-metaDescription: Featured behavioural analytics project by Nikunj Prajapati.
+metaDescription: Featured data analytics and machine learning projects by Nikunj Prajapati.
 socialImage: /images/featured-Image2.jpg
 colors: colors-a
 backgroundImage:
@@ -31,7 +31,7 @@ projectFeed:
 topSections:
   - type: HeroSection
     title: Project
-    subtitle: Featured behavioural movement analysis research project.
+    subtitle: Featured data analytics, machine learning, and research projects.
     actions: []
     colors: colors-f
     backgroundSize: full
