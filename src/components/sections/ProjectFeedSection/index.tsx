@@ -13,11 +13,11 @@ export default function ProjectFeedSection(props) {
     return (
         <Section elementId={elementId} colors={colors} styles={styles.self}>
             {title && (
-                <h2 className={classNames('text-4xl sm:text-5xl', mapStyles({ textAlign: sectionAlign }))}>{title}</h2>
+                <h2 className={classNames('site-section-title text-4xl sm:text-5xl', mapStyles({ textAlign: sectionAlign }))}>{title}</h2>
             )}
             {subtitle && (
                 <p
-                    className={classNames('text-lg sm:text-xl', mapStyles({ textAlign: sectionAlign }), {
+                    className={classNames('site-section-subtitle text-lg sm:text-xl', mapStyles({ textAlign: sectionAlign }), {
                         'mt-6': title
                     })}
                 >
@@ -67,7 +67,7 @@ function ProjectGrid(props) {
     const TitleTag = headingLevel;
     return (
         <div
-            className={classNames('grid gap-y-12', {
+            className={classNames('project-grid grid gap-y-12', {
                 'md:grid-cols-2': variant === 'variant-a',
                 'md:grid-cols-3': variant === 'variant-b',
                 'justify-center': variant === 'variant-c',
@@ -76,9 +76,9 @@ function ProjectGrid(props) {
             })}
         >
             {projects.map((project, index) => (
-                <Link key={index} href={project} className="block max-w-3xl pb-10 border-b border-current group">
+                <Link key={index} href={project} className="project-card block max-w-3xl pb-10 border-b border-current group">
                     {showFeaturedImage && project.featuredImage && (
-                        <div className="w-full mb-6 overflow-hidden aspect-3/2">
+                        <div className="project-card__image w-full mb-6 overflow-hidden aspect-3/2">
                             <ImageBlock
                                 {...project.featuredImage}
                                 className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
@@ -90,11 +90,11 @@ function ProjectGrid(props) {
                             <ProjectDate date={project.date} />
                         </div>
                     )}
-                    <TitleTag className="text-3xl sm:text-4xl">{project.title}</TitleTag>
-                    {showDescription && project.description && <p className="mt-5 text-lg">{project.description}</p>}
+                    <TitleTag className="project-card__title text-3xl sm:text-4xl">{project.title}</TitleTag>
+                    {showDescription && project.description && <p className="project-card__description mt-5 text-lg">{project.description}</p>}
                     {showReadMoreLink && (
                         <div className="mt-8">
-                            <span className="inline-flex text-xl transition rounded-full p-4 border-2 border-current group-hover:bottom-shadow-6 group-hover:-translate-y-1.5">
+                            <span className="project-card__arrow inline-flex text-xl transition rounded-full p-4 border-2 border-current group-hover:bottom-shadow-6 group-hover:-translate-y-1.5">
                                 <ArrowUpRightIcon className="fill-current w-icon h-icon" />
                             </span>
                         </div>
@@ -121,12 +121,12 @@ function ProjectList(props) {
     const TitleTag = headingLevel;
     return (
         <div
-            className={classNames('grid gap-y-12', {
+            className={classNames('project-list grid gap-y-12', {
                 'mt-12': hasTopMargin
             })}
         >
             {projects.map((project, index) => (
-                <Link key={index} href={project} className="block pb-10 border-b border-current group md:pb-12 md:px-4">
+                <Link key={index} href={project} className="project-list-card block pb-10 border-b border-current group md:pb-12 md:px-4">
                     <div className="flex flex-col gap-8 md:flex-row md:items-center">
                         {showFeaturedImage && project.featuredImage && (
                             <div className="md:shrink-0 md:self-stretch md:w-48">

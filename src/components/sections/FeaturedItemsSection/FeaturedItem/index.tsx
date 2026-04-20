@@ -15,7 +15,7 @@ export default function FeaturedItem(props) {
         <Annotated content={props}>
             <article
                 id={elementId || null}
-                className={classNames('overflow-hidden', mapStyles(otherSelfStyles))}
+                className={classNames('featured-item overflow-hidden', mapStyles(otherSelfStyles))}
                 style={{
                     borderWidth: borderWidth ? `${borderWidth}px` : null
                 }}
@@ -25,8 +25,8 @@ export default function FeaturedItem(props) {
                         <ImageBlock {...featuredImage} className="inline-block" />
                     </div>
                 )}
-                {title && <TitleTag className="text-3xl sm:text-4xl">{title}</TitleTag>}
-                {subtitle && <p className={classNames('text-lg', { 'mt-1': title })}>{subtitle}</p>}
+                {title && <TitleTag className="featured-item__title text-3xl sm:text-4xl">{title}</TitleTag>}
+                {subtitle && <p className={classNames('featured-item__subtitle text-lg', { 'mt-1': title })}>{subtitle}</p>}
                 {text && (
                     <Markdown
                         options={{ forceBlock: true, forceWrapper: true }}

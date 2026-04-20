@@ -14,7 +14,7 @@ const BaseLayout: React.FC<BaseLayoutProps> = (props) => {
     const { site } = global;
 
     return (
-        <div className="flex flex-col grow">
+        <div className="site-shell flex flex-col grow">
             {page?.backgroundImage && <BackgroundImage {...page?.backgroundImage} />}
             {site.header && (
                 <Annotated content={site}>
@@ -24,7 +24,7 @@ const BaseLayout: React.FC<BaseLayoutProps> = (props) => {
                 </Annotated>
             )}
             <Annotated content={page}>
-                <main id="main" className="relative grow">
+                <main id="main" className="site-main relative grow">
                     {props.children}
                 </main>
             </Annotated>

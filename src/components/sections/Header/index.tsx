@@ -12,9 +12,9 @@ export default function Header(props) {
     const { isSticky, styles = {}, ...rest } = props;
     const headerWidth = styles.self?.width ?? 'narrow';
     return (
-        <header className={classNames(isSticky ? 'sticky top-0 z-10' : 'relative', 'border-b border-current')}>
+        <header className={classNames('site-header', isSticky ? 'sticky top-0 z-10' : 'relative', 'border-b border-current')}>
             <div
-                className={classNames({
+                className={classNames('site-header__frame', {
                     'max-w-7xl mx-auto xl:border-x xl:border-current': headerWidth === 'narrow',
                     'max-w-8xl mx-auto 2xl:border-x 2xl:border-current': headerWidth === 'wide',
                     'w-full': headerWidth === 'full'
@@ -44,7 +44,7 @@ function HeaderVariants(props) {
 function HeaderVariantA(props) {
     const { primaryLinks = [], socialLinks = [], ...logoProps } = props;
     return (
-        <div className="relative flex items-stretch">
+        <div className="site-header__inner relative flex items-stretch">
             <SiteLogoLink {...logoProps} />
             {primaryLinks.length > 0 && (
                 <ul className="hidden border-r border-current divide-x divide-current lg:flex">
@@ -64,7 +64,7 @@ function HeaderVariantA(props) {
 function HeaderVariantB(props) {
     const { primaryLinks = [], socialLinks = [], ...logoProps } = props;
     return (
-        <div className="relative flex items-stretch">
+        <div className="site-header__inner relative flex items-stretch">
             <SiteLogoLink {...logoProps} />
             {primaryLinks.length > 0 && (
                 <ul className="hidden ml-auto border-l border-current divide-x divide-current lg:flex">
@@ -88,7 +88,7 @@ function HeaderVariantB(props) {
 function HeaderVariantC(props) {
     const { primaryLinks = [], socialLinks = [], ...logoProps } = props;
     return (
-        <div className="relative flex items-stretch">
+        <div className="site-header__inner relative flex items-stretch">
             <SiteLogoLink {...logoProps} />
             {socialLinks.length > 0 && (
                 <ul className="hidden ml-auto border-l border-current lg:flex">
@@ -174,7 +174,7 @@ function SiteLogoLink({ title, isTitleVisible, logo }) {
     }
     return (
         <div className="flex items-center border-r border-current">
-            <Link href="/" className="flex items-center h-full gap-2 p-4 link-fill">
+            <Link href="/" className="site-logo flex items-center h-full gap-2 p-4 link-fill">
                 {logo && <ImageBlock {...logo} className="max-h-12" />}
                 {title && isTitleVisible && <span className="text-base tracking-widest uppercase">{title}</span>}
             </Link>

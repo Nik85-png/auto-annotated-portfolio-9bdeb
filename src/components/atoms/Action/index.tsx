@@ -20,7 +20,7 @@ export default function Action(props) {
     const IconComponent = icon ? iconMap[icon] : null;
 
     const baseClasses = [
-        'relative inline-flex items-center justify-center gap-1.5 text-center text-lg leading-tight no-underline transition lg:whitespace-nowrap'
+        'site-action relative inline-flex items-center justify-center gap-1.5 text-center text-lg leading-tight no-underline transition lg:whitespace-nowrap'
     ];
     if (type === 'Button') {
         label ? baseClasses.push('py-4 px-5') : baseClasses.push('p-4');

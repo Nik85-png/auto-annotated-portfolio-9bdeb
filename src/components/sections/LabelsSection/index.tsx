@@ -11,11 +11,11 @@ export default function LabelsSection(props) {
     return (
         <Section elementId={elementId} colors={colors} styles={styles.self}>
             {title && (
-                <h2 className={classNames('text-4xl sm:text-5xl', mapStyles({ textAlign: sectionAlign }))}>{title}</h2>
+                <h2 className={classNames('site-section-title text-4xl sm:text-5xl', mapStyles({ textAlign: sectionAlign }))}>{title}</h2>
             )}
             {subtitle && (
                 <p
-                    className={classNames('text-lg sm:text-xl', mapStyles({ textAlign: sectionAlign }), {
+                    className={classNames('site-section-subtitle text-lg sm:text-xl', mapStyles({ textAlign: sectionAlign }), {
                         'mt-6': title
                     })}
                 >
@@ -50,12 +50,12 @@ function LabelItem(props) {
             {url ? (
                 <Link
                     href={url}
-                    className="inline-flex relative text-lg leading-tight no-underline transition rounded-full py-4 px-5 border-2 border-current hover:bottom-shadow-6 hover:-translate-y-1.5"
+                    className="site-label inline-flex relative text-lg leading-tight no-underline transition rounded-full py-4 px-5 border-2 border-current hover:bottom-shadow-6 hover:-translate-y-1.5"
                 >
                     {label}
                 </Link>
             ) : (
-                <div className="inline-flex px-5 py-4 text-lg leading-tight border-2 border-current rounded-full">
+                <div className="site-label inline-flex px-5 py-4 text-lg leading-tight border-2 border-current rounded-full">
                     {label}
                 </div>
             )}

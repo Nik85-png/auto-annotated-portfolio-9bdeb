@@ -19,23 +19,23 @@ export default function Component(props: HeroSection) {
     const sectionAlign = styles.self?.textAlign ?? 'left';
     return (
         <Section elementId={elementId} colors={colors} backgroundSize={backgroundSize} styles={styles.self}>
-            <div className={classNames('flex gap-8', mapFlexDirectionStyles(sectionFlexDirection))}>
+            <div className={classNames('site-hero flex gap-8', mapFlexDirectionStyles(sectionFlexDirection))}>
                 <div className={classNames('flex-1 w-full', mapStyles({ textAlign: sectionAlign }))}>
                     {title && (
                         <AnnotatedField path=".title">
-                            <h1 className="text-5xl sm:text-6xl">{title}</h1>
+                            <h1 className="site-hero__title text-5xl sm:text-6xl">{title}</h1>
                         </AnnotatedField>
                     )}
                     {subtitle && (
                         <AnnotatedField path=".subtitle">
-                            <p className={classNames('text-xl sm:text-2xl', { 'mt-4': title })}>{subtitle}</p>
+                            <p className={classNames('site-hero__subtitle text-xl sm:text-2xl', { 'mt-4': title })}>{subtitle}</p>
                         </AnnotatedField>
                     )}
                     {text && (
                         <AnnotatedField path=".text">
                             <Markdown
                                 options={{ forceBlock: true, forceWrapper: true }}
-                                className={classNames('max-w-none prose sm:prose-lg', {
+                                className={classNames('site-hero__text max-w-none prose sm:prose-lg', {
                                     'mt-6': title || subtitle
                                 })}
                             >
