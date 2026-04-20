@@ -27,28 +27,20 @@ media:
 
 The final pipeline uses **2,008 patients** from the Zhang / PhysioNet heart failure cohort and a strict leakage-clean feature set of **143 predictors**. Administrative IDs, discharge timing, and post-outcome proxy variables were removed after audit checks.
 
+The full project page is designed as a standalone wide-screen research summary. It includes the Streamlit research-tool section, model audit narrative, final AUROC results, SHAP explanations, MIMIC-IV external validation, and advanced evaluation figures.
+
 [Open the full HF-RISK project page ->](/hf-risk/index.html)
-
-## Final Project Page
-
-<iframe
-  src="/hf-risk/index.html"
-  title="HF-RISK Final MSc Project Page"
-  style="width:100%;min-height:1400px;border:0;border-radius:14px;background:transparent;"
-  loading="lazy"
-></iframe>
 
 ## What Was Built
 
 | Component | Description |
 |---|---|
-| **EDA** | Missingness maps, class balance, BNP/LVEF/NYHA summaries, and patient characteristics |
+| **Research tool** | Streamlit prototype connected to final trained models; testing only, not for clinical use |
 | **Leakage audit** | Removed patient ID, discharge timing, and post-outcome proxy variables before final modelling |
-| **ML Models** | Logistic Regression, Decision Tree, Random Forest, XGBoost, and LightGBM across four outcomes |
-| **Survival Models** | Kaplan-Meier, Cox Proportional Hazards, and Random Survival Forest |
+| **ML models** | Logistic Regression, Decision Tree, Random Forest, XGBoost, and LightGBM across four outcomes |
 | **Explainability** | SHAP global importance, beeswarm plots, and patient-level waterfall plots |
 | **External validation** | Zhang-trained models tested directly on MIMIC-IV without retraining |
-| **Research Tool** | Streamlit prototype for testing only, not for clinical decision-making |
+| **Advanced evaluation** | Calibration, Decision Curve Analysis, and subgroup checks by gender and CKD |
 
 ## Final Results Snapshot
 
@@ -59,9 +51,9 @@ The final pipeline uses **2,008 patients** from the Zhang / PhysioNet heart fail
 | 6-month mortality | XGBoost | 0.710 |
 | 6-month readmission | XGBoost | 0.650 |
 
-External validation on MIMIC-IV produced AUROC **0.524** for 28-day mortality and **0.599** for 6-month mortality, highlighting dataset shift and limited model transportability across healthcare systems.
+Before the strict audit, the primary 6-month mortality model had reached AUROC **0.819**. After removing stricter proxy variables including patient ID and discharge timing, the final defensible AUROC became **0.710** internally and **0.599** on MIMIC-IV external validation.
 
-The project deliberately reports the stricter leakage-clean results rather than the highest early AUROC, because the final model is methodologically more defensible.
+That reduction is part of the project story: it shows that the final dissertation reports the honest leakage-clean result rather than the most flattering early number.
 
 ## Dataset & Citations
 

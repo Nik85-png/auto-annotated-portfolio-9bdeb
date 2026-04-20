@@ -358,7 +358,7 @@
       "Creatine kinase"
     ],
     "tool_url": "",
-    "key_insight": "Early models achieved higher AUROC and appeared competitive with several published benchmarks, but audit checks identified administrative, temporal, and post-outcome proxy variables. After removing these, the final leakage-clean model reported more conservative but defensible performance: 6-month mortality AUROC 0.7098 internally and 0.5995 on MIMIC-IV external validation."
+    "key_insight": "Early models achieved higher AUROC, including 0.8186 for 6-month mortality, but audit checks identified administrative, temporal, and post-outcome proxy variables. After removing these, the final leakage-clean model reported more conservative but defensible performance: 6-month mortality AUROC 0.7098 internally and 0.5995 on MIMIC-IV external validation."
   },
   "glossary": [
     {
@@ -438,10 +438,26 @@
     },
     "research_warning": "Research prototype only. Not clinically validated and not for patient-care decisions.",
     "audit_note": {
-      "before_audit": "Earlier models produced higher headline AUROC and appeared to beat multiple benchmarks.",
-      "audit_action": "Removed patient ID, discharge timing, and post-outcome proxy variables from predictors.",
-      "after_audit": "Final strict 6-month mortality AUROC was 0.7098 internally and 0.5995 on MIMIC-IV.",
-      "interpretation": "Reduced AUROC is presented as methodological integrity rather than model failure."
+      "before_audit": {
+        "28d_death": 0.8931,
+        "3m_death": 0.9193,
+        "6m_death": 0.8186,
+        "6m_readmission": 0.6479
+      },
+      "after_strict_audit": {
+        "28d_death": 0.7811,
+        "3m_death": 0.8392,
+        "6m_death": 0.7098,
+        "6m_readmission": 0.6497
+      },
+      "removed_variables": [
+        "Unnamed: 0",
+        "inpatient.number",
+        "dischargeDay",
+        "outcome.during.hospitalization",
+        "readmission and emergency-return timing proxies"
+      ],
+      "interpretation": "The final dissertation reports lower but leakage-clean AUROC values to avoid overstating clinical performance."
     }
   }
 }

@@ -8,151 +8,204 @@
   <style>
     :root {
       --ink:#102033; --muted:#607085; --bg:#f4f0e8; --paper:#fffdf8; --line:#d9d1c3;
-      --navy:#0b2545; --teal:#0f8f83; --amber:#c7772c; --red:#a94a3c; --blue:#2c6b9f;
+      --navy:#0b2545; --navy2:#123c69; --teal:#0f8f83; --mint:#dff5f1; --amber:#c7772c; --red:#a94a3c; --blue:#2c6b9f;
       --shadow:0 24px 70px rgba(16,32,51,.12);
     }
     * { box-sizing:border-box; }
-    body { margin:0; font-family: Georgia, 'Times New Roman', serif; color:var(--ink); background:linear-gradient(135deg,#f7f2e9 0%,#eef4f3 50%,#f4f0e8 100%); }
+    html { scroll-behavior:smooth; }
+    body { margin:0; font-family: Georgia, 'Times New Roman', serif; color:var(--ink); background:linear-gradient(135deg,#f7f2e9 0%,#eef4f3 45%,#f4f0e8 100%); }
     a { color:inherit; }
     .top-warning { background:#fff3d7; border-bottom:1px solid #e5c374; color:#5e3b00; padding:12px 22px; font:600 14px/1.5 system-ui, sans-serif; text-align:center; }
     .top-warning strong { color:#8a4a00; }
-    nav { position:sticky; top:0; z-index:10; background:rgba(255,253,248,.86); backdrop-filter:blur(18px); border-bottom:1px solid var(--line); }
-    nav .inner { max-width:1180px; margin:auto; padding:14px 22px; display:flex; align-items:center; justify-content:space-between; gap:18px; }
-    .brand { font:800 14px/1 system-ui, sans-serif; letter-spacing:.18em; color:var(--navy); }
-    .links { display:flex; gap:16px; flex-wrap:wrap; font:700 12px/1 system-ui, sans-serif; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+    nav { position:sticky; top:0; z-index:20; background:rgba(255,253,248,.9); backdrop-filter:blur(18px); border-bottom:1px solid var(--line); }
+    nav .inner { max-width:1500px; margin:auto; padding:14px 28px; display:flex; align-items:center; justify-content:space-between; gap:18px; }
+    .brand { font:900 14px/1 system-ui, sans-serif; letter-spacing:.18em; color:var(--navy); }
+    .links { display:flex; gap:16px; flex-wrap:wrap; font:800 12px/1 system-ui, sans-serif; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
     .links a { text-decoration:none; }
-    .hero { max-width:1180px; margin:34px auto 0; padding:0 22px; }
-    .hero-panel { background:radial-gradient(circle at 85% 10%,rgba(15,143,131,.22),transparent 34%),linear-gradient(135deg,#0b2545,#123c69 55%,#0f8f83); color:white; border-radius:34px; padding:54px; box-shadow:var(--shadow); overflow:hidden; position:relative; }
-    .eyebrow { font:800 12px/1 system-ui, sans-serif; letter-spacing:.2em; text-transform:uppercase; color:#96f0e7; margin-bottom:18px; }
-    h1 { margin:0; max-width:840px; font-size:clamp(34px,6vw,74px); line-height:.98; letter-spacing:-.05em; }
-    .hero p { max-width:760px; color:rgba(255,255,255,.78); font-size:18px; line-height:1.65; margin:22px 0 0; }
-    .hero-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:34px; }
-    .hero-stat { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); border-radius:18px; padding:18px; }
-    .hero-stat strong { display:block; font:800 30px/1 system-ui, sans-serif; }
-    .hero-stat span { display:block; margin-top:8px; color:rgba(255,255,255,.7); font:700 12px/1.35 system-ui, sans-serif; text-transform:uppercase; letter-spacing:.08em; }
-    main { max-width:1180px; margin:auto; padding:26px 22px 70px; }
-    section { margin-top:24px; }
-    .section-head { display:flex; align-items:end; justify-content:space-between; gap:20px; margin-bottom:14px; }
-    h2 { font-size:clamp(26px,3vw,42px); line-height:1; margin:0; letter-spacing:-.035em; }
-    .section-head p { max-width:620px; margin:0; color:var(--muted); line-height:1.65; }
-    .grid { display:grid; gap:16px; }
-    .two { grid-template-columns:1.04fr .96fr; }
+    .wrap { width:min(1500px, calc(100vw - 48px)); margin-inline:auto; }
+    .hero { margin-top:28px; }
+    .hero-panel { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(360px,.8fr); gap:24px; align-items:stretch; background:radial-gradient(circle at 85% 10%,rgba(15,143,131,.24),transparent 34%),linear-gradient(135deg,#0b2545,#123c69 55%,#0f8f83); color:white; border-radius:36px; padding:42px; box-shadow:var(--shadow); overflow:hidden; position:relative; }
+    .eyebrow { font:900 12px/1 system-ui, sans-serif; letter-spacing:.2em; text-transform:uppercase; color:#96f0e7; margin-bottom:18px; }
+    h1 { margin:0; max-width:940px; font-size:clamp(40px,6vw,86px); line-height:.94; letter-spacing:-.055em; }
+    .hero p { max-width:850px; color:rgba(255,255,255,.8); font-size:18px; line-height:1.65; margin:24px 0 0; }
+    .hero-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:32px; }
+    .hero-stat { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); border-radius:20px; padding:18px; }
+    .hero-stat strong { display:block; font:900 34px/1 system-ui, sans-serif; }
+    .hero-stat span { display:block; margin-top:8px; color:rgba(255,255,255,.72); font:800 12px/1.35 system-ui, sans-serif; text-transform:uppercase; letter-spacing:.08em; }
+    .tool-hero { background:rgba(255,253,248,.96); color:var(--ink); border-radius:28px; padding:28px; border:1px solid rgba(255,255,255,.55); box-shadow:0 24px 80px rgba(0,0,0,.18); }
+    .tool-hero h2 { font-size:clamp(28px,3vw,46px); margin:0 0 10px; line-height:1; letter-spacing:-.04em; }
+    .tool-hero p { color:var(--muted); margin:0 0 14px; font-size:15px; }
+    .tool-list { display:grid; gap:10px; margin:18px 0; padding:0; list-style:none; }
+    .tool-list li { display:flex; gap:10px; color:var(--muted); line-height:1.5; font-size:14px; }
+    .tool-list b { color:var(--teal); }
+    main { padding:28px 0 76px; }
+    section { margin-top:34px; }
+    .section-head { display:flex; align-items:end; justify-content:space-between; gap:28px; margin-bottom:18px; }
+    h2 { font-size:clamp(32px,4vw,58px); line-height:.95; margin:0; letter-spacing:-.05em; }
+    .section-head p { max-width:720px; margin:0; color:var(--muted); line-height:1.65; font-size:17px; }
+    .grid { display:grid; gap:18px; }
+    .two { grid-template-columns:1fr 1fr; }
     .three { grid-template-columns:repeat(3,1fr); }
     .four { grid-template-columns:repeat(4,1fr); }
-    .card, .metric-card { background:var(--paper); border:1px solid var(--line); border-radius:24px; padding:24px; box-shadow:0 14px 40px rgba(16,32,51,.06); }
-    .card h3 { margin:0 0 10px; font-size:22px; letter-spacing:-.02em; }
-    .card p, .card li { color:var(--muted); line-height:1.7; font-size:15px; }
-    .metric-card span { display:block; color:var(--muted); font:800 12px/1.3 system-ui, sans-serif; letter-spacing:.1em; text-transform:uppercase; min-height:32px; }
-    .metric-card strong { display:block; font:900 44px/1 system-ui, sans-serif; letter-spacing:-.04em; color:var(--navy); margin-top:12px; }
-    .metric-card small { display:block; color:var(--muted); line-height:1.45; margin-top:10px; }
-    .muted-card strong { color:var(--amber); }
+    .card, .metric-card { background:var(--paper); border:1px solid var(--line); border-radius:28px; padding:28px; box-shadow:0 14px 40px rgba(16,32,51,.06); }
+    .card h3 { margin:0 0 12px; font-size:26px; letter-spacing:-.025em; }
+    .card p, .card li { color:var(--muted); line-height:1.72; font-size:16px; }
+    .muted { color:var(--muted); }
     .warning-card { border-color:#e5c374; background:#fff8e6; }
-    .audit-card { background:linear-gradient(135deg,#fff8e6,#ffffff 55%,#edf8f6); border:1px solid #e5c374; border-radius:28px; padding:28px; box-shadow:0 16px 48px rgba(16,32,51,.08); }
-    .audit-steps { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:18px; }
-    .audit-step { background:rgba(255,255,255,.72); border:1px solid var(--line); border-radius:18px; padding:18px; }
-    .audit-step span { display:block; color:var(--amber); font:900 11px/1 system-ui, sans-serif; letter-spacing:.14em; text-transform:uppercase; margin-bottom:8px; }
-    .audit-step strong { display:block; color:var(--navy); font:900 28px/1 system-ui, sans-serif; margin-bottom:8px; }
-    .audit-step p { margin:0; color:var(--muted); font-size:14px; line-height:1.6; }
-    .tool-card { background:linear-gradient(135deg,#ffffff,#edf8f6); border-color:#b8d9d4; }
-    .tool-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
-    .button { display:inline-flex; align-items:center; justify-content:center; border-radius:999px; padding:12px 16px; background:var(--navy); color:white; text-decoration:none; font:800 12px/1 system-ui, sans-serif; letter-spacing:.08em; text-transform:uppercase; }
-    .button.secondary { background:white; color:var(--navy); border:1px solid var(--line); }
-    .code { display:block; background:#0b2545; color:#d7fff9; border-radius:16px; padding:14px; overflow:auto; font:13px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; }
-    table { width:100%; border-collapse:collapse; overflow:hidden; }
-    th, td { padding:13px 12px; border-bottom:1px solid var(--line); text-align:left; }
-    th { font:800 11px/1 system-ui, sans-serif; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+    .metric-card span { display:block; color:var(--muted); font:900 12px/1.3 system-ui, sans-serif; letter-spacing:.12em; text-transform:uppercase; min-height:32px; }
+    .metric-card strong { display:block; font:900 clamp(38px,4.5vw,66px)/.95 system-ui, sans-serif; letter-spacing:-.06em; color:var(--navy); margin-top:16px; }
+    .metric-card small { display:block; color:var(--muted); line-height:1.45; margin-top:10px; font-size:15px; }
+    .external-card strong { color:var(--amber); }
+    .calibration-card strong { color:var(--teal); }
+    .audit-card { background:linear-gradient(135deg,#fff8e6,#ffffff 55%,#edf8f6); border:1px solid #e5c374; border-radius:32px; padding:32px; box-shadow:0 16px 48px rgba(16,32,51,.08); }
+    .audit-steps { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:18px; }
+    .audit-step { background:rgba(255,255,255,.8); border:1px solid var(--line); border-radius:22px; padding:22px; }
+    .audit-step span { display:block; color:var(--amber); font:900 11px/1 system-ui, sans-serif; letter-spacing:.14em; text-transform:uppercase; margin-bottom:10px; }
+    .audit-step strong { display:block; color:var(--navy); font:900 30px/1 system-ui, sans-serif; margin-bottom:10px; }
+    .audit-step p { margin:0; color:var(--muted); font-size:15px; line-height:1.6; }
+    .audit-table-wrap { overflow:auto; margin-top:18px; border:1px solid var(--line); border-radius:22px; background:rgba(255,255,255,.76); }
+    table { width:100%; border-collapse:collapse; }
+    th, td { padding:14px 14px; border-bottom:1px solid var(--line); text-align:left; }
+    tr:last-child td { border-bottom:0; }
+    th { font:900 11px/1 system-ui, sans-serif; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); white-space:nowrap; }
     td { font-size:15px; }
-    .bar { height:9px; border-radius:999px; background:#e7e0d5; overflow:hidden; min-width:120px; }
+    .storyline { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; counter-reset:step; }
+    .story-step { position:relative; background:var(--paper); border:1px solid var(--line); border-radius:24px; padding:24px; min-height:220px; }
+    .story-step::before { counter-increment:step; content:'0' counter(step); display:inline-flex; width:42px; height:42px; border-radius:50%; align-items:center; justify-content:center; background:var(--navy); color:#fff; font:900 13px/1 system-ui, sans-serif; margin-bottom:18px; }
+    .story-step h3 { margin:0 0 8px; font-size:22px; }
+    .story-step p { margin:0; color:var(--muted); line-height:1.65; }
+    .tool-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+    .button { display:inline-flex; align-items:center; justify-content:center; border-radius:999px; padding:13px 17px; background:var(--navy); color:white; text-decoration:none; font:900 12px/1 system-ui, sans-serif; letter-spacing:.08em; text-transform:uppercase; }
+    .button.secondary { background:white; color:var(--navy); border:1px solid var(--line); }
+    .button.ghost { background:var(--mint); color:var(--navy); }
+    .code { display:block; background:#0b2545; color:#d7fff9; border-radius:18px; padding:16px; overflow:auto; font:13px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .bar { height:10px; border-radius:999px; background:#e7e0d5; overflow:hidden; min-width:120px; }
     .bar i { display:block; height:100%; border-radius:999px; background:linear-gradient(90deg,var(--teal),#72d6ca); }
-    .figure { margin:0; }
-    .figure img { width:100%; display:block; border-radius:18px; border:1px solid var(--line); background:white; }
-    .figure figcaption { color:var(--muted); font-size:13px; line-height:1.5; margin-top:8px; }
+    .figure-grid { display:grid; gap:18px; }
+    .figure-grid.two { grid-template-columns:1fr 1fr; }
+    .figure-grid.three { grid-template-columns:repeat(3,1fr); }
+    .figure { margin:0; display:flex; flex-direction:column; min-height:100%; }
+    .figure-frame { background:#081827; border-radius:20px; border:1px solid var(--line); aspect-ratio:16/9; display:flex; align-items:center; justify-content:center; overflow:hidden; padding:18px; }
+    .figure img { width:100%; height:100%; object-fit:contain; display:block; }
+    .figure figcaption { color:var(--muted); font-size:14px; line-height:1.5; margin-top:12px; }
     .note { border-left:4px solid var(--teal); padding-left:16px; color:var(--muted); }
     footer { background:var(--navy); color:rgba(255,255,255,.72); padding:34px 22px; text-align:center; font:14px/1.6 system-ui, sans-serif; }
-    @media (max-width:900px) { .two,.three,.four,.hero-grid,.audit-steps { grid-template-columns:1fr 1fr; } .hero-panel { padding:34px 24px; } .section-head { display:block; } .section-head p { margin-top:10px; } }
-    @media (max-width:620px) { .two,.three,.four,.hero-grid,.audit-steps { grid-template-columns:1fr; } .links { display:none; } .hero-panel { border-radius:24px; } .metric-card strong { font-size:36px; } }
+    @media (max-width:1100px) { .hero-panel,.two,.figure-grid.two { grid-template-columns:1fr; } .four,.storyline { grid-template-columns:1fr 1fr; } .three,.figure-grid.three,.audit-steps { grid-template-columns:1fr 1fr; } }
+    @media (max-width:680px) { .wrap { width:min(100% - 24px, 1500px); } .hero-panel { padding:26px; border-radius:26px; } .hero-grid,.four,.three,.storyline,.figure-grid.three,.audit-steps { grid-template-columns:1fr; } .links { display:none; } .section-head { display:block; } .section-head p { margin-top:12px; } .card,.metric-card,.audit-card { padding:22px; border-radius:22px; } }
   </style>
 </head>
 <body>
   <div class="top-warning"><strong>Research prototype - not for clinical use.</strong> This MSc dissertation project has not been clinically validated and must not be used to inform patient care decisions.</div>
-  <nav><div class="inner"><div class="brand">HF-RISK</div><div class="links"><a href="#results">Results</a><a href="#explain">Explainability</a><a href="#validation">MIMIC-IV</a><a href="#tool">Tool</a></div></div></nav>
-  <header class="hero">
+  <nav><div class="inner"><div class="brand">HF-RISK</div><div class="links"><a href="#tool">Tool</a><a href="#audit">Audit</a><a href="#results">Results</a><a href="#explain">SHAP</a><a href="#validation">MIMIC-IV</a></div></div></nav>
+
+  <header class="hero wrap">
     <div class="hero-panel">
-      <div class="eyebrow">MSc Data Analytics - Heart Failure ML</div>
-      <h1>Predicting heart failure outcomes with leakage-clean machine learning.</h1>
-      <p>HF-RISK trains models on 2,008 hospitalised heart failure patients from the Zhang / PhysioNet cohort, then tests transfer to 42,990 MIMIC-IV patients. The final results are deliberately conservative: administrative IDs, discharge timing, and post-outcome leakage variables were removed before modelling.</p>
-      <div class="hero-grid">
-        <div class="hero-stat"><strong>143</strong><span>final clean predictors</span></div>
-        <div class="hero-stat"><strong>0.710</strong><span>6-month death internal AUROC</span></div>
-        <div class="hero-stat"><strong>0.599</strong><span>6-month MIMIC external AUROC</span></div>
-        <div class="hero-stat"><strong>10</strong><span>analysis scripts</span></div>
+      <div>
+        <div class="eyebrow">MSc Data Analytics - Heart Failure ML</div>
+        <h1>From high scores to honest scores.</h1>
+        <p>HF-RISK predicts heart failure outcomes after discharge. The early models looked stronger, but audit checks found shortcut variables. The final project reports the stricter leakage-clean results because they are the ones that can be defended.</p>
+        <div class="hero-grid">
+          <div class="hero-stat"><strong>143</strong><span>clean predictors</span></div>
+          <div class="hero-stat"><strong>0.710</strong><span>6-month internal AUROC</span></div>
+          <div class="hero-stat"><strong>0.599</strong><span>6-month MIMIC AUROC</span></div>
+          <div class="hero-stat"><strong>42,990</strong><span>MIMIC-IV patients</span></div>
+        </div>
       </div>
+      <aside id="tool" class="tool-hero">
+        <div class="eyebrow" style="color:var(--teal);margin-bottom:12px">Research tool</div>
+        <h2>Streamlit risk prototype</h2>
+        <p>The tool loads the final trained models, fills missing inputs with training medians, maps readable feature names to model-safe names, and returns predicted risk for each outcome.</p>
+        <ul class="tool-list">
+          <li><b>Model</b><span>Uses the final 143-feature leakage-clean model set.</span></li>
+          <li><b>Output</b><span>Shows four outcomes: 28-day death, 3-month death, 6-month death, and 6-month readmission.</span></li>
+          <li><b>Safety</b><span>Testing and demonstration only. Not clinically validated.</span></li>
+        </ul>
+        <div class="tool-actions">
+          <a class="button" href="https://github.com/Nik85-png/auto-annotated-portfolio-9bdeb/blob/main/MSc%20Project/06_streamlit_tool.py" target="_blank" rel="noopener">View tool code</a>
+          <a class="button secondary" href="https://github.com/Nik85-png/auto-annotated-portfolio-9bdeb/blob/main/MSc%20Project/README.md" target="_blank" rel="noopener">Read README</a>
+          <a class="button ghost" href="https://github.com/Nik85-png/auto-annotated-portfolio-9bdeb/blob/main/MSc%20Project/run_hf_risk_colab.ipynb" target="_blank" rel="noopener">Colab runner</a>
+        </div>
+      </aside>
     </div>
   </header>
-  <main>
-    <section id="summary" class="grid two">
-      <article class="card">
-        <h3>What the project does</h3>
-        <p>The project predicts four discharge outcomes: death within 28 days, death within 3 months, death within 6 months, and readmission within 6 months. The main models are trained on the Chinese Zhang cohort and internally tested on a held-out Zhang test set.</p>
-        <p>The work then asks a harder question: can those same Zhang-trained models transfer to MIMIC-IV, a US hospital dataset with different patients, coding, missingness, and available measurements?</p>
-      </article>
-      <article class="card warning-card">
-        <h3>Why the numbers are conservative</h3>
-        <p>The first models looked stronger and appeared competitive with several published studies. A later audit found that some signal came from administrative, temporal, or post-outcome proxy variables. Those variables were removed, which lowered AUROC but made the methodology more defensible.</p>
-      </article>
+
+  <main class="wrap">
+    <section id="story">
+      <div class="section-head"><h2>The project story</h2><p>The page now follows the actual research process: build, audit, explain, test externally, and package as a research prototype.</p></div>
+      <div class="storyline">
+        <article class="story-step"><h3>Develop</h3><p>Train models on the Zhang / PhysioNet heart failure cohort using 2,008 hospitalised patients.</p></article>
+        <article class="story-step"><h3>Audit</h3><p>Remove patient ID, discharge timing, and post-outcome proxies that could inflate performance.</p></article>
+        <article class="story-step"><h3>Explain</h3><p>Use SHAP to identify clinically plausible drivers such as GCS, CKD, valve measures, and liver disease.</p></article>
+        <article class="story-step"><h3>Validate</h3><p>Apply Zhang-trained models directly to MIMIC-IV to measure external transportability.</p></article>
+      </div>
     </section>
 
     <section id="audit" class="audit-card">
       <div class="section-head">
-        <h2>Model audit: why the final AUROC is lower</h2>
-        <p>The project deliberately reports the stricter leakage-clean results rather than the most flattering early numbers. That choice is the point: the final model is easier to defend in an academic or clinical review.</p>
+        <h2>The audit changed the result</h2>
+        <p>Before the strict audit, AUROC looked strong enough to support a simple "beats benchmarks" story. The audit found that some of this strength came from variables that are not defensible for a true discharge-time model. Reporting the reduced AUROC is a sign of methodological integrity, not failure.</p>
       </div>
       <div class="audit-steps">
-        <div class="audit-step">
-          <span>Before audit</span>
-          <strong>Higher AUROC</strong>
-          <p>Early models reached stronger headline scores and appeared to beat several benchmarks, but the feature set still contained variables that could act as shortcuts.</p>
-        </div>
-        <div class="audit-step">
-          <span>Audit finding</span>
-          <strong>Leakage risk</strong>
-          <p>Patient identifiers, discharge timing, and post-discharge outcome proxies were identified as unfair or fragile predictors for a real discharge-time model.</p>
-        </div>
-        <div class="audit-step">
-          <span>Final result</span>
-          <strong>Honest model</strong>
-          <p>After removing those variables, the primary 6-month mortality AUROC became 0.710 internally and 0.599 on MIMIC-IV, giving conservative but defensible evidence.</p>
-        </div>
+        <div class="audit-step"><span>Earlier result</span><strong>0.819</strong><p>Primary 6-month mortality AUROC before removing the stricter proxy variables.</p></div>
+        <div class="audit-step"><span>Audit action</span><strong>Removed</strong><p><code>inpatient.number</code>, <code>dischargeDay</code>, and outcome/readmission timing proxies were excluded from predictors.</p></div>
+        <div class="audit-step"><span>Final result</span><strong>0.710</strong><p>Leakage-clean 6-month mortality AUROC on the held-out Zhang test set.</p></div>
+      </div>
+      <div class="audit-table-wrap">
+        <table><thead><tr><th>Outcome</th><th>Before strict audit</th><th>Final strict test</th><th>Change</th><th>Final model</th></tr></thead><tbody><tr>
+      <td>28-day mortality</td>
+      <td>0.893</td>
+      <td>0.781</td>
+      <td>-0.112</td>
+      <td>Random Forest</td>
+    </tr><tr>
+      <td>3-month mortality</td>
+      <td>0.919</td>
+      <td>0.839</td>
+      <td>-0.080</td>
+      <td>Random Forest</td>
+    </tr><tr>
+      <td>6-month mortality</td>
+      <td>0.819</td>
+      <td>0.710</td>
+      <td>-0.109</td>
+      <td>XGBoost</td>
+    </tr><tr>
+      <td>6-month readmission</td>
+      <td>0.648</td>
+      <td>0.650</td>
+      <td>+0.002</td>
+      <td>XGBoost</td>
+    </tr></tbody></table>
       </div>
     </section>
 
     <section id="results">
-      <div class="section-head"><h2>Final internal test results</h2><p>Held-out test performance on the Zhang dataset after strict leakage and proxy-variable removal.</p></div>
+      <div class="section-head"><h2>Final internal test results</h2><p>Held-out test performance on Zhang after strict leakage and proxy-variable removal. These are the final dissertation-safe numbers.</p></div>
       <div class="grid four"><article class="metric-card">
       <span>28-day mortality</span>
       <strong>0.781</strong>
-      <small>Random Forest - internal test AUROC</small>
+      <small>Random Forest - final held-out test AUROC</small>
     </article><article class="metric-card">
       <span>3-month mortality</span>
       <strong>0.839</strong>
-      <small>Random Forest - internal test AUROC</small>
+      <small>Random Forest - final held-out test AUROC</small>
     </article><article class="metric-card">
       <span>6-month mortality</span>
       <strong>0.710</strong>
-      <small>XGBoost - internal test AUROC</small>
+      <small>XGBoost - final held-out test AUROC</small>
     </article><article class="metric-card">
       <span>6-month readmission</span>
       <strong>0.650</strong>
-      <small>XGBoost - internal test AUROC</small>
+      <small>XGBoost - final held-out test AUROC</small>
     </article></div>
-      <div class="grid two" style="margin-top:16px">
-        <figure class="figure card"><img src="assets/roc_curves.png" alt="Internal ROC curves"><figcaption>Final ROC curves for the four Zhang internal test outcomes.</figcaption></figure>
-        <figure class="figure card"><img src="assets/auroc_heatmap.png" alt="Cross-validated AUROC heatmap"><figcaption>Five-model cross-validation comparison across outcomes.</figcaption></figure>
+      <div class="figure-grid two" style="margin-top:18px">
+        <figure class="figure card"><div class="figure-frame"><img src="assets/roc_curves.png" alt="Internal ROC curves"></div><figcaption>Final ROC curves for the four Zhang internal test outcomes.</figcaption></figure>
+        <figure class="figure card"><div class="figure-frame"><img src="assets/auroc_heatmap.png" alt="Cross-validated AUROC heatmap"></div><figcaption>Five-model cross-validation comparison across outcomes.</figcaption></figure>
       </div>
     </section>
 
     <section id="explain">
-      <div class="section-head"><h2>What drives the 6-month mortality model?</h2><p>SHAP shows the leading predictors after removing ID, date, and outcome leakage. GCS and CKD now lead the explanation; discharge day no longer appears.</p></div>
+      <div class="section-head"><h2>What drives the 6-month model?</h2><p>After removing the shortcuts, the model relies on neurological status, kidney disease, cardiac structure/function, liver disease, and inflammatory markers. Discharge day no longer appears.</p></div>
       <div class="grid two">
         <article class="card">
           <table><thead><tr><th>#</th><th>Predictor</th><th>Mean |SHAP|</th><th>Relative</th></tr></thead><tbody><tr>
@@ -207,63 +260,52 @@
       <td><div class="bar"><i style="width:30.9%"></i></div></td>
     </tr></tbody></table>
         </article>
-        <figure class="figure card"><img src="assets/shap_bar.png" alt="SHAP bar chart"><figcaption>Global mean absolute SHAP importance for the primary 6-month mortality model.</figcaption></figure>
+        <figure class="figure card"><div class="figure-frame"><img src="assets/shap_bar.png" alt="SHAP bar chart"></div><figcaption>Global mean absolute SHAP importance for the primary 6-month mortality model.</figcaption></figure>
       </div>
     </section>
 
     <section id="validation">
-      <div class="section-head"><h2>MIMIC-IV external validation</h2><p>External validation applies the Zhang-trained models directly to MIMIC-IV. No retraining happens in this step.</p></div>
-      <div class="grid two"><article class="metric-card muted-card">
+      <div class="section-head"><h2>External validation on MIMIC-IV</h2><p>Here the Zhang-trained models are applied directly to MIMIC-IV. They are not retrained. The drop is evidence of dataset shift and limited transportability.</p></div>
+      <div class="grid two"><article class="metric-card external-card">
       <span>28-day Mortality</span>
       <strong>0.524</strong>
       <small>MIMIC-IV external AUROC, 95% CI 0.515-0.532</small>
-    </article><article class="metric-card muted-card">
+    </article><article class="metric-card external-card">
       <span>6-month Mortality</span>
       <strong>0.599</strong>
       <small>MIMIC-IV external AUROC, 95% CI 0.593-0.606</small>
     </article></div>
-      <div class="grid two" style="margin-top:16px">
-        <article class="card"><h3>Interpretation</h3><p>External AUROC is lower than internal AUROC, especially for 28-day mortality. This is evidence of dataset shift: the US MIMIC cohort differs in population, measurement availability, coding, and missingness. This does not invalidate the project; it is a major finding about clinical model transportability.</p></article>
-        <figure class="figure card"><img src="assets/external_validation_roc.png" alt="External validation ROC"><figcaption>Zhang-trained model performance when applied to MIMIC-IV.</figcaption></figure>
+      <div class="figure-grid two" style="margin-top:18px">
+        <article class="card"><h3>How to read this</h3><p>Internal performance asks whether the model works on unseen Zhang patients. External validation asks the harder question: can a Zhang-trained model work in a different US hospital system? The answer is: only partly. That is an important finding for clinical ML deployment.</p></article>
+        <figure class="figure card"><div class="figure-frame"><img src="assets/external_validation_roc.png" alt="External validation ROC"></div><figcaption>Zhang-trained model performance when applied to MIMIC-IV.</figcaption></figure>
       </div>
     </section>
 
     <section id="advanced">
-      <div class="section-head"><h2>Beyond AUROC</h2><p>Script 10 adds calibration, decision curve analysis, and subgroup checks so evaluation is not limited to discrimination.</p></div>
-      <div class="grid two"><article class="metric-card">
+      <div class="section-head"><h2>Evaluation beyond AUROC</h2><p>Script 10 adds calibration, decision curve analysis, and subgroup checks so the project does not stop at discrimination metrics.</p></div>
+      <div class="grid two"><article class="metric-card calibration-card">
       <span>6m_death</span>
       <strong>0.027</strong>
       <small>Brier score; ECE 0.023</small>
-    </article><article class="metric-card">
+    </article><article class="metric-card calibration-card">
       <span>28d_death</span>
       <strong>0.016</strong>
       <small>Brier score; ECE 0.035</small>
     </article></div>
-      <div class="grid three" style="margin-top:16px">
-        <figure class="figure card"><img src="assets/calibration_curves.png" alt="Calibration curves"><figcaption>Reliability diagrams with Brier and ECE metrics.</figcaption></figure>
-        <figure class="figure card"><img src="assets/dca_curves.png" alt="Decision curve analysis"><figcaption>Decision Curve Analysis across clinically plausible thresholds.</figcaption></figure>
-        <figure class="figure card"><img src="assets/subgroup_gender.png" alt="Gender subgroup analysis"><figcaption>Bootstrapped AUROC by gender subgroup.</figcaption></figure>
+      <div class="figure-grid three" style="margin-top:18px">
+        <figure class="figure card"><div class="figure-frame"><img src="assets/calibration_curves.png" alt="Calibration curves"></div><figcaption>Reliability diagrams with Brier and ECE metrics.</figcaption></figure>
+        <figure class="figure card"><div class="figure-frame"><img src="assets/dca_curves.png" alt="Decision curve analysis"></div><figcaption>Decision Curve Analysis across clinically plausible thresholds.</figcaption></figure>
+        <figure class="figure card"><div class="figure-frame"><img src="assets/subgroup_gender.png" alt="Gender subgroup analysis"></div><figcaption>Bootstrapped AUROC by gender subgroup.</figcaption></figure>
       </div>
     </section>
 
-    <section id="tool" class="grid two">
-      <article class="card tool-card">
-        <h3>Research prediction tool</h3>
-        <p>The Streamlit tool connects to the final trained models and allows local testing with feature defaults from the training data. It is intentionally labelled as a research/testing prototype.</p>
-        <div class="tool-actions"><a class="button" href="../../MSc%20Project/06_streamlit_tool.py">View tool script</a><a class="button secondary" href="../../MSc%20Project/README.md">Read pipeline README</a></div>
-      </article>
-      <article class="card">
-        <h3>Run locally</h3>
-        <p>From the project folder:</p>
-        <code class="code">cd "MSc Project"
-streamlit run 06_streamlit_tool.py</code>
-        <p class="note">No public clinical deployment is linked here. If a Streamlit URL is deployed later, this section can expose a launch button without changing the modelling pipeline.</p>
-      </article>
+    <section id="run" class="grid two">
+      <article class="card warning-card"><h3>Important safety note</h3><p>This is a dissertation research prototype. It is not a medical device, not clinically validated, and not suitable for patient-care decisions. The value of the tool is methodological demonstration: feature handling, model loading, prediction output, and explainability workflow.</p></article>
+      <article class="card"><h3>Run the local prototype</h3><p>From the project folder:</p><code class="code">cd "MSc Project"
+streamlit run 06_streamlit_tool.py</code><p class="note">The public website links to GitHub source files rather than local paths, so the buttons work after deployment.</p></article>
     </section>
   </main>
-  <footer>
-    HF-RISK - Nikunj Prajapati (24052351), MSc Data Analytics, London Metropolitan University.<br />
-    Data sources: Zhang et al. (2021) PhysioNet heart failure cohort and MIMIC-IV. Publicly available, de-identified data only.
-  </footer>
+
+  <footer>HF-RISK - Nikunj Prajapati (24052351), MSc Data Analytics, London Metropolitan University.<br />Data sources: Zhang et al. (2021) PhysioNet heart failure cohort and MIMIC-IV. Publicly available, de-identified data only.</footer>
 </body>
 </html>
