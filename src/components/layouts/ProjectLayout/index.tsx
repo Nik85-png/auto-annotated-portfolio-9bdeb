@@ -34,35 +34,35 @@ const Component: React.FC<ComponentProps> = (props) => {
 
     return (
         <BaseLayout {...props}>
-            <article className="px-4 py-14 lg:py-20">
-                <header className="max-w-5xl mx-auto mb-10 sm:mb-14">
-                    {client && <div className="text-lg uppercase md:mb-6">{client}</div>}
+            <article className="site-project-article px-4 py-14 lg:py-20">
+                <header className="site-project-header max-w-5xl mx-auto mb-10 sm:mb-14">
+                    {client && <div className="site-project-client text-lg uppercase md:mb-6">{client}</div>}
                     <div className="flex flex-col gap-6 md:flex-row md:justify-between">
-                        <time className="text-lg md:order-last" dateTime={dateTimeAttr}>
+                        <time className="site-project-date text-lg md:order-last" dateTime={dateTimeAttr}>
                             {formattedDate}
                         </time>
-                        <h1 className="text-5xl sm:text-6xl md:max-w-2xl md:grow">{title}</h1>
+                        <h1 className="site-project-title text-5xl sm:text-6xl md:max-w-2xl md:grow">{title}</h1>
                     </div>
                 </header>
                 {description && (
-                    <div className="max-w-3xl mx-auto mb-10 text-lg uppercase sm:text-xl sm:mb-14">{description}</div>
+                    <div className="site-project-description max-w-3xl mx-auto mb-10 text-lg uppercase sm:text-xl sm:mb-14">{description}</div>
                 )}
                 {media && (
-                    <figure className="max-w-5xl mx-auto mb-10 sm:mb-14">
+                    <figure className="site-project-media max-w-5xl mx-auto mb-10 sm:mb-14">
                         <ProjectMedia media={media} />
                     </figure>
                 )}
                 {markdownContent && (
                     <Markdown
                         options={{ forceBlock: true, overrides: { pre: HighlightedPreBlock } }}
-                        className="max-w-3xl mx-auto prose sm:prose-lg"
+                        className="site-project-prose max-w-3xl mx-auto prose sm:prose-lg"
                     >
                         {markdownContent}
                     </Markdown>
                 )}
             </article>
             {(prevProject || nextProject) && (
-                <nav className="px-4 mt-12 mb-20">
+                <nav className="site-project-nav px-4 mt-12 mb-20">
                     <div className="grid max-w-5xl mx-auto gap-x-6 gap-y-12 sm:grid-cols-2 lg:gap-x-8">
                         {prevProject && <ProjectNavItem project={prevProject} className={undefined} />}
                         {nextProject && (

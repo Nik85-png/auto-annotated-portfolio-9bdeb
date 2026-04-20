@@ -462,6 +462,96 @@ layer(base);
         font-size: 0.78em;
     }
 
+    .site-project-article {
+        color: var(--theme-on-light);
+        background:
+            linear-gradient(180deg, color-mix(in srgb, var(--theme-light) 92%, transparent), var(--theme-light) 42%),
+            radial-gradient(circle at 12% 12%, color-mix(in srgb, var(--theme-primary) 20%, transparent), transparent 34%),
+            radial-gradient(circle at 88% 22%, color-mix(in srgb, var(--theme-complementary) 16%, transparent), transparent 36%);
+        border-bottom: 1px solid color-mix(in srgb, var(--theme-on-light) 12%, transparent);
+    }
+
+    .site-project-header {
+        padding-top: clamp(24px, 4vw, 56px);
+    }
+
+    .site-project-client,
+    .site-project-date {
+        color: color-mix(in srgb, var(--theme-on-light) 58%, transparent);
+        font-size: 0.82rem !important;
+        letter-spacing: 0.18em;
+    }
+
+    .site-project-title {
+        max-width: 12ch;
+        color: var(--theme-on-light);
+        font-size: clamp(3rem, 7.4vw, 7.2rem) !important;
+        line-height: 0.98 !important;
+        letter-spacing: -0.045em;
+        font-weight: 500;
+    }
+
+    .site-project-description {
+        color: color-mix(in srgb, var(--theme-on-light) 72%, transparent);
+        line-height: 1.7;
+        letter-spacing: 0.08em;
+    }
+
+    .site-project-media {
+        border: 1px solid color-mix(in srgb, var(--theme-on-light) 14%, transparent);
+        border-radius: 10px;
+        overflow: hidden;
+        background: color-mix(in srgb, var(--theme-light) 76%, white 24%);
+    }
+
+    .site-project-prose {
+        --tw-prose-body: var(--theme-on-light);
+        --tw-prose-headings: var(--theme-on-light);
+        --tw-prose-lead: var(--theme-on-light);
+        --tw-prose-links: var(--theme-on-light);
+        --tw-prose-bold: var(--theme-on-light);
+        --tw-prose-counters: color-mix(in srgb, var(--theme-on-light) 62%, transparent);
+        --tw-prose-bullets: color-mix(in srgb, var(--theme-on-light) 62%, transparent);
+        --tw-prose-hr: color-mix(in srgb, var(--theme-on-light) 18%, transparent);
+        --tw-prose-quotes: var(--theme-on-light);
+        --tw-prose-quote-borders: var(--theme-primary);
+        --tw-prose-captions: color-mix(in srgb, var(--theme-on-light) 62%, transparent);
+        --tw-prose-code: var(--theme-on-light);
+        --tw-prose-pre-code: var(--theme-on-dark);
+        --tw-prose-pre-bg: var(--theme-dark);
+        --tw-prose-th-borders: color-mix(in srgb, var(--theme-on-light) 18%, transparent);
+        --tw-prose-td-borders: color-mix(in srgb, var(--theme-on-light) 12%, transparent);
+        color: var(--theme-on-light);
+        background: color-mix(in srgb, var(--theme-light) 82%, white 18%);
+        border: 1px solid color-mix(in srgb, var(--theme-on-light) 12%, transparent);
+        border-radius: 10px;
+        padding: clamp(24px, 4vw, 52px);
+        box-shadow: 0 22px 80px color-mix(in srgb, var(--theme-on-light) 8%, transparent);
+    }
+
+    .site-project-prose :where(p, li) {
+        color: color-mix(in srgb, var(--theme-on-light) 76%, transparent);
+    }
+
+    .site-project-prose :where(h2, h3) {
+        color: var(--theme-on-light);
+        letter-spacing: -0.025em;
+    }
+
+    .site-project-prose a {
+        color: var(--theme-on-light);
+    }
+
+    .site-project-prose blockquote {
+        background: color-mix(in srgb, var(--theme-primary) 9%, transparent);
+        border-left-color: var(--theme-primary);
+        color: var(--theme-on-light);
+    }
+
+    .site-project-nav {
+        color: var(--theme-on-light);
+    }
+
     @media (max-width: 768px) {
         .site-hero {
             min-height: auto;
