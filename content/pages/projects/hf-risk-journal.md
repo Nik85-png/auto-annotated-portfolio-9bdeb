@@ -59,8 +59,8 @@ A Streamlit research prototype loads the final trained models and returns predic
 It is a **research prototype only** — a demo of the pipeline's behaviour, not a clinical tool. There is no live clinical deployment. The full project page embeds a non-clinical demo form; the source also runs locally:
 
 ```
-git clone github.com/Nik85-png/hf-risk
-cd hf-risk/MSc\ Project
+git clone https://github.com/Nik85-png/hf-risk-heart-failure-ml.git
+cd hf-risk-heart-failure-ml/MSc\ Project
 pip install -r requirements.txt
 streamlit run 06_streamlit_tool.py
 ```
