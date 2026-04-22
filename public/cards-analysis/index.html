@@ -1,97 +1,279 @@
-﻿
-<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Interactive Card Sorting Analysis</title>
-<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
-<style>
-:root{--theme-dark:#0d1b2a;--theme-primary:#667eea;--theme-complementary:#764ba2;--theme-secondary:#fbbf24;--panel-bg:#fff;--panel-muted:#f8fafc;--panel-border:#e2e8f0;--text-main:#1f2937;--text-muted:#6b7280;--success:#10b981;--danger:#ef4444;--blank-color:#9e9e9e}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,var(--theme-dark) 0%,#1e3a8a 50%,var(--theme-primary) 100%);color:var(--text-main);min-height:100vh;padding:20px}
-.container{max-width:1400px;margin:0 auto;background:var(--panel-bg);border-radius:24px;box-shadow:0 25px 80px rgba(0,0,0,.4);padding:36px}
-.header{border-bottom:3px solid var(--theme-primary);padding-bottom:24px;margin-bottom:28px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-complementary));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.header h1{font-size:34px;font-weight:800;margin-bottom:10px}.header p{color:var(--text-muted);line-height:1.7;font-size:16px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin:24px 0}
-.stat{border-radius:16px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-complementary));color:#fff;padding:20px;text-align:center;box-shadow:0 8px 20px rgba(102,126,234,.3)}
-.stat .value{font-size:32px;font-weight:800;margin-bottom:6px}.stat .label{font-size:13px;opacity:.95}
-.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0 28px}.tab{border:2px solid transparent;border-radius:12px;padding:12px 20px;background:var(--panel-muted);font-weight:600;cursor:pointer}.tab.active{background:linear-gradient(135deg,var(--theme-primary),var(--theme-complementary));color:#fff}
-.panel{display:none}.panel.active{display:block}
-.card{border:2px solid var(--panel-border);border-radius:16px;padding:24px;margin-bottom:20px;background:var(--panel-bg)}
-.card h2,.card h3{margin-bottom:16px;color:var(--theme-dark)}.card p,.card ul{color:var(--text-muted);line-height:1.7}
-.controls{display:grid;gap:16px}.controls select,.controls input[type='range']{width:100%;padding:12px;border-radius:10px;border:2px solid var(--panel-border);background:#fff}
-.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}.btn{border:none;padding:12px 24px;border-radius:10px;cursor:pointer;font-weight:600;font-size:14px}
-.btn.primary{background:linear-gradient(135deg,var(--success),#059669);color:#fff}.btn.secondary{background:var(--panel-muted);color:var(--text-main)}
-.btn.final-state{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff}.btn.final-state.active{background:linear-gradient(135deg,#d97706,#b45309)}
-.grid-wrap{background:linear-gradient(135deg,#064e3b,#065f46);border-radius:16px;padding:24px;overflow-x:auto;box-shadow:inset 0 2px 10px rgba(0,0,0,.3)}
-.grid{display:grid;grid-template-columns:40px repeat(8,1fr);grid-template-rows:40px repeat(8,1fr);gap:5px;min-width:580px;max-width:720px;margin:0 auto}
-.cell{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}.head{background:linear-gradient(135deg,var(--theme-primary),var(--theme-complementary));color:#fff}
-.empty{background:rgba(255,255,255,.12);border:2px dashed rgba(255,255,255,.3)}.card-cell{background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.25);font-size:18px}
-.card-cell.current{border:3px solid var(--theme-secondary);box-shadow:0 0 20px rgba(251,191,36,.8)}.card-cell.blank{background:var(--blank-color);color:#fff;border:2px solid #757575}
-.card-cell.phase-early{background:#dbeafe;border:2px solid #3b82f6}.card-cell.phase-late{background:#ffedd5;border:2px solid #f97316}
-.card-cell.phase-early.blank{background:#bfdbfe}.card-cell.phase-late.blank{background:#fed7aa}
-.filter-chip{border:1px solid #e2e8f0;border-radius:8px;padding:4px 10px;font-size:0.75rem;font-family:inherit;background:#f8fafc;cursor:pointer}
-.filter-chip:hover{background:#e2e8f0}.filter-chip.active{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-color:transparent}
-.muted{color:var(--text-muted)}.split{display:grid;grid-template-columns:1fr;gap:20px}@media (min-width:1024px){.split{grid-template-columns:1.3fr 1fr}}
-.mode-indicator{text-align:center;padding:10px;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff;border-radius:8px;font-weight:700;margin-bottom:12px;display:none}.mode-indicator.active{display:block}
-body.embed-mode{background:transparent;padding:0;overflow:hidden}body.embed-mode .container{max-width:none;border-radius:16px;box-shadow:none;padding:20px;background:rgba(255,255,255,.95)}
-body.embed-mode .header,body.embed-mode .stats,body.embed-mode .tabs{display:none}
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Card Sorting Analysis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Azeret+Mono:ital,wght@0,400;0,500;0,600;1,400&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<div class="container" id="cardsContainer">
-<div class="header"><h1>Interactive Card Sorting Analysis</h1><p>Spatial organization and cognitive strategy analysis - 229 trials - 9 analysis types - Blank cards visible in final state</p></div>
-<div class="stats" id="statsBar"></div>
-<div class="tabs"><button class="tab active" data-panel="overview">Overview</button><button class="tab" data-panel="animations">Animations</button><button class="tab" data-panel="statistics">Statistics</button></div>
-<section id="overview" class="panel active"><div class="card"><h2>Project Overview</h2><p>This project investigates how people organize information spatially in an 8x8 grid and how strategy quality predicts success.</p></div></section>
-<section id="animations" class="panel">
-<div class="split"><div><div class="card controls">
-<label for="analysisType">Analysis Type</label><select id="analysisType"></select><p id="analysisText" class="muted"></p>
-<div id="participantSelectWrap" style="display:none">
-<label for="participantSelect">Participant (Analysis 6)</label><select id="participantSelect"></select>
-</div>
-<label for="trialSelect">Select Trial</label><select id="trialSelect"></select>
-<div id="outcomeFilter" style="display:flex;flex-wrap:wrap;gap:6px;margin:4px 0"></div>
-<div style="margin:2px 0"><button class="btn secondary" id="openPickerBtn" type="button">Choose Trials&hellip;</button></div>
-<div class="btn-row"><button class="btn final-state" id="finalStateBtn">Show Final State</button></div>
-<div class="btn-row"><button class="btn secondary" id="resetBtn">Reset</button><button class="btn secondary" id="prevBtn">Prev</button><button class="btn primary" id="playBtn">Play</button><button class="btn secondary" id="nextBtn">Next</button></div>
-<label for="speedControl">Speed: <span id="speedLabel">0.8x</span></label><input type="range" id="speedControl" min="150" max="2000" value="800" />
-<p id="moveCounter" class="muted" style="text-align:center;font-size:16px;font-weight:600;">Move 0 / 0</p>
-</div>
-<div class="mode-indicator" id="modeIndicator">Showing Final State (Including Blank Cards)</div>
-<div class="grid-wrap"><div id="grid" class="grid"></div></div></div>
-<div><div class="card"><h3>Trial Details</h3><div id="trialInfo" class="muted">Select a trial to view details.</div>
-<div style="margin-top:12px;font-size:0.78rem;color:#6b7280"><strong style="color:#1f2937">Legend</strong><br>Gold glow = current move<br><span style="color:#3b82f6;font-weight:700">Blue border</span> = early move (Analysis 4)<br><span style="color:#f97316;font-weight:700">Orange border</span> = late move (Analysis 4)</div>
-</div></div></div>
-</section>
-<section id="statistics" class="panel"><div class="card"><h3>Success and Strategy Summary</h3><div id="summaryBar"></div></div><div class="card"><h3>Success Rate by Condition</h3><div id="conditionBar"></div></div><div class="card"><h3>Messiness Deterioration Comparison</h3><div id="messinessBar"></div></div><div class="card"><h3>Move Count Distribution</h3><div id="moveDistBar"></div></div><div class="card"><h3>Blank Card Advantage Analysis</h3><div id="blankCardBar"></div></div><div class="card"><h3>Messiness Distribution by Outcome</h3><div id="messinessBoxBar"></div></div></section>
-</div>
+    <div id="app" class="container">
 
-<!-- Trial Picker Modal -->
-<div id="trialPickerModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:20px">
-  <div style="background:#fff;border-radius:16px;padding:20px;width:100%;max-width:700px;max-height:85vh;display:flex;flex-direction:column;gap:10px;box-shadow:0 24px 64px rgba(0,0,0,.3)">
-    <div style="display:flex;align-items:center;justify-content:space-between">
-      <h3 style="margin:0">Choose Trials</h3>
-      <button id="pickerClose" type="button" style="background:none;border:none;font-size:1.6rem;cursor:pointer;color:#6b7280;line-height:1;padding:0 6px">&times;</button>
+        <header class="header">
+            <h1>Interactive Card Sorting Analysis</h1>
+            <p class="header-sub">Spatial organisation, strategy quality &amp; blank-card usage</p>
+            <p class="research-q"><strong>Research question:</strong> Can we predict card-sorting task success by analysing <em>how</em> people work (behaviour patterns) rather than just their final outcome?</p>
+        </header>
+
+        <section class="stats" id="stats"></section>
+
+        <nav class="page-tabs">
+            <button class="page-tab active" data-panel="overview">Overview &amp; Viewer</button>
+            <button class="page-tab" data-panel="statistics">Statistics</button>
+            </nav>
+
+        <!-- OVERVIEW + ANIMATION VIEWER -->
+        <section id="panel-overview" class="page-panel active">
+
+            <div class="viewer-section">
+                <div class="viewer-controls">
+                    <h2 class="viewer-heading">Animation Viewer</h2>
+
+                    <label for="analysisSelect">Analysis Type</label>
+                    <select id="analysisSelect"></select>
+                    <p id="analysisExplanation" class="muted small"></p>
+
+                    <div id="participantSelectWrap" style="display:none">
+                        <label for="participantSelect">Participant</label>
+                        <select id="participantSelect"></select>
+                    </div>
+
+                    <label for="trialSelect">Trial</label>
+                    <select id="trialSelect"></select>
+
+                    <div class="outcome-filter" id="outcomeFilter"></div>
+
+                    <div class="trial-picker-row">
+                        <button id="openPickerBtn" type="button">Choose Trials&hellip;</button>
+                    </div>
+
+                    <div class="buttons">
+                        <button id="finalStateBtn" type="button" class="final-state-btn">Show Final State</button>
+                    </div>
+
+                    <div class="buttons playback-controls" aria-label="Playback controls">
+                        <button id="resetBtn" type="button">Reset</button>
+                        <button id="prevBtn" type="button">Prev</button>
+                        <button id="playBtn" type="button" class="primary">Play</button>
+                        <button id="nextBtn" type="button">Next</button>
+                    </div>
+
+                    <label for="speedRange">Speed: <span id="speedLabel">1.2x</span></label>
+                    <input id="speedRange" type="range" min="150" max="2000" value="800" />
+                    <p id="moveCounter" class="counter">Move 0 / 0</p>
+                </div>
+
+                <div class="viewer-stage">
+                    <div id="modeIndicator" class="mode-indicator">Showing Final State (Including Blank Cards)</div>
+                    <div class="card table-wrap">
+                        <div id="grid" class="grid"></div>
+                    </div>
+                    <div class="viewer-meta">
+                        <div class="card compact">
+                            <h3>Trial Details</h3>
+                            <div id="trialInfo" class="muted">Loading&hellip;</div>
+                        </div>
+                        <div class="card compact">
+                            <h3>Legend</h3>
+                            <p class="muted small">
+                                Gold glow = current move &bull;
+                                Gray = blank card &bull;
+                                8&times;8 grid (0&ndash;7) &bull;
+                                <span style="color:#3b82f6;font-weight:600">Blue</span> = early &bull;
+                                <span style="color:#f97316;font-weight:600">Orange</span> = late
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <details class="doc-accordion" open>
+                <summary class="doc-toggle">Project Documentation &amp; Findings</summary>
+                <div class="project-doc">
+                    <div class="doc-hero">
+                        <span class="doc-kicker">Behavioural movement analysis</span>
+                        <h2>How people arrange the cards is the signal.</h2>
+                        <p>
+                            This viewer treats every card placement as evidence of strategy. The final outcome matters,
+                            but the movement path reveals whether a participant was building an organised spatial plan,
+                            repeatedly undoing work, using blank cards as scaffolding, or recovering across repeated attempts.
+                        </p>
+                    </div>
+
+                    <div class="insight-grid">
+                        <article class="insight-card tone-green">
+                            <span class="insight-label">Dataset</span>
+                            <strong>766 recorded trials</strong>
+                            <p>714 trials contain enough movement data for animation and comparison after filtering unusable or empty movement logs.</p>
+                        </article>
+                        <article class="insight-card tone-gold">
+                            <span class="insight-label">Task</span>
+                            <strong>8&times;8 spatial board</strong>
+                            <p>Participants arranged Kings, Queens, Jacks, and sometimes blank cards while each row, column, card identity, and outcome was preserved.</p>
+                        </article>
+                        <article class="insight-card tone-clay">
+                            <span class="insight-label">Core signal</span>
+                            <strong>Messiness and recovery</strong>
+                            <p>The interface compares final organisation, within-trial progression, repeated attempts, speed, and repeated card placements.</p>
+                        </article>
+                    </div>
+
+                    <div class="doc-grid doc-grid-wide">
+                        <div class="card doc-panel">
+                            <h2>How to Read the Viewer</h2>
+                            <p><strong>Analysis Type</strong> changes the behavioural question being asked. Some views focus on clean successes, some on messy failures, and some on progression or repeated attempts.</p>
+                            <p><strong>Participant</strong> appears for repeated-attempt analysis only. It lets you compare all trials for one person chronologically instead of mixing everyone together.</p>
+                            <p><strong>Trial</strong> selects the exact movement sequence. The dropdown includes participant ID, outcome, condition, move count, messiness, and recovery labels where relevant.</p>
+                            <p><strong>Show Final State</strong> jumps to the final board, including blank cards, so you can inspect the completed organisation without playing every move.</p>
+                        </div>
+
+                        <div class="card doc-panel">
+                            <h2>Conditions and Materials</h2>
+                            <table class="doc-table">
+                                <thead><tr><th>Condition</th><th>Cards Available</th><th>Interpretation</th></tr></thead>
+                                <tbody>
+                                    <tr><td>KQ</td><td>King + Queen</td><td>Simple rank grouping without extra working-memory load.</td></tr>
+                                    <tr><td>KQB</td><td>King + Queen + Blank</td><td>Tests whether blank cards help participants scaffold a layout.</td></tr>
+                                    <tr><td>KQJ</td><td>King + Queen + Jack</td><td>Adds a third rank, increasing organisation complexity.</td></tr>
+                                    <tr><td>KQJB</td><td>King + Queen + Jack + Blank</td><td>Combines higher card complexity with optional blank-card support.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card doc-panel analysis-panel">
+                        <h2>Nine Analysis Views</h2>
+                        <div class="analysis-list">
+                            <p><strong>1. Successful Clean Patterns</strong> &mdash; successful trials with enough movement to show strategy rather than a trivial placement.</p>
+                            <p><strong>2. Failed Messy Patterns</strong> &mdash; failed trials where organisation breaks down early or never stabilises.</p>
+                            <p><strong>3. All Successful Trials</strong> &mdash; a broad comparison of winning paths, including different move counts and conditions.</p>
+                            <p><strong>4. In-Trial Progression</strong> &mdash; highlights early moves in blue and late moves in orange so improvement or deterioration is visible inside one trial.</p>
+                            <p><strong>5. Opening Strategies</strong> &mdash; focuses on the first five moves, because early anchors often shape the rest of the layout.</p>
+                            <p><strong>6. Repeated Attempts and Success Recovery</strong> &mdash; only participants with multiple usable trials are shown, making retry/progression comparisons meaningful.</p>
+                            <p><strong>7. Extreme Cases by Outcome</strong> &mdash; cleanest and messiest examples are separated by success/failure so extremes do not collapse into only failed trials.</p>
+                            <p><strong>8. Speed Comparison</strong> &mdash; compares quick successful solvers with slower successful solvers to separate efficiency from exploration.</p>
+                            <p><strong>9. Card Repetition Patterns</strong> &mdash; surfaces whether participants repeatedly revisit the same card/position or explore broadly.</p>
+                        </div>
+                    </div>
+
+                    <div class="doc-grid">
+                        <div class="card doc-panel">
+                            <h2>Key Findings</h2>
+                            <h3>Organisation beats raw effort</h3>
+                            <p>More moves do not automatically mean better strategy. Successful participants tend to preserve coherent regions, while failed trials often show repeated local changes without a stable global plan.</p>
+                            <h3>Blank cards act like scaffolding</h3>
+                            <p>When blanks are available, they can function as external working-memory placeholders. The advantage is strongest when participants use blanks to reserve structure rather than treating them as random fillers.</p>
+                            <h3>Recovery is uncommon but informative</h3>
+                            <p>Repeated attempts are especially useful because they show whether a participant changes strategy after failure or simply repeats the same unstable pattern.</p>
+                        </div>
+
+                        <div class="card doc-panel">
+                            <h2>Statistical Interpretation</h2>
+                            <p><strong>Messiness score</strong> summarises spatial disorder in the final or evolving layout. Lower values indicate tighter grouping and cleaner spatial structure.</p>
+                            <p><strong>Move count</strong> is not treated as success by itself. It is useful only when interpreted alongside outcome, messiness, condition, and whether movements are repetitive.</p>
+                            <p><strong>Blank-card comparisons</strong> show whether conditions with blank cards improve completion rates, but the interpretation is behavioural support, not proof that blanks alone cause success.</p>
+                            <p><strong>Progression views</strong> are descriptive. They reveal within-trial change, but should be read as strategy evidence rather than a clinical-style prediction model.</p>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+        </section>
+
+        <!-- STATISTICS PANEL -->
+        <section id="panel-statistics" class="page-panel">
+            <div class="stats-intro">
+                <span class="doc-kicker">Statistical summary</span>
+                <h2>Charts are evidence, not decoration.</h2>
+                <p>
+                    These plots summarise the behavioural dataset behind the viewer. Read them together:
+                    success rate, condition, messiness, move count, and blank-card use each explain a different
+                    part of strategy quality.
+                </p>
+            </div>
+            <section class="stats stats-panel-metrics" id="statsPanelMetrics"></section>
+            <section class="charts">
+                <div class="card chart-card"><h3>Trial Summary</h3><p class="chart-note">Counts the usable trials by final outcome. This gives the base rate before interpreting strategy details.</p><div id="summaryChart"></div></div>
+                <div class="card chart-card"><h3>Success Rate by Condition</h3><p class="chart-note">Compares how task materials affect completion. Conditions with blanks should be read as support/scaffolding opportunities.</p><div id="conditionChart"></div></div>
+                <div class="card chart-card"><h3>Messiness by Outcome</h3><p class="chart-note">Contrasts average spatial disorder for successful and failed trials. Lower messiness usually means clearer grouping.</p><div id="messinessChart"></div></div>
+                <div class="card chart-card"><h3>Move Count Distribution</h3><p class="chart-note">Shows whether successful and failed participants differ in exploration volume. More movement is not automatically better.</p><div id="moveDistChart"></div></div>
+                <div class="card chart-card"><h3>Blank Card Advantage</h3><p class="chart-note">Compares success rates when blank cards appear versus when they do not. This is behavioural evidence for scaffolding.</p><div id="blankChart"></div></div>
+                <div class="card chart-card"><h3>Messiness Distribution</h3><p class="chart-note">Box plots show spread, mean, and outliers, making it easier to see whether failures are consistently messier.</p><div id="messinessBoxChart"></div></div>
+            </section>
+        </section>
+
     </div>
-    <div id="pickerFilterBar" style="display:flex;flex-wrap:wrap;gap:6px"></div>
-    <input id="pickerSearch" type="text" placeholder="Search participant, condition, outcome&hellip;" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font:inherit;font-size:0.88rem;width:100%" />
-    <p style="margin:0;font-size:0.82rem;color:#6b7280"><span id="pickerCount">0 selected</span> &mdash; check trials to include, then click Apply.</p>
-    <div id="pickerList" style="overflow-y:auto;flex:1;border:1px solid #e2e8f0;border-radius:8px;padding:6px;min-height:160px;max-height:360px"></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
-      <button id="pickerSelectAll" type="button" class="btn secondary" style="font-size:0.82rem;padding:8px 14px">Select All Visible</button>
-      <button id="pickerClearAll" type="button" class="btn secondary" style="font-size:0.82rem;padding:8px 14px">Clear Visible</button>
-      <button id="pickerReset" type="button" class="btn secondary" style="font-size:0.82rem;padding:8px 14px">Reset to Default</button>
-      <button id="pickerApply" type="button" class="btn primary" style="font-size:0.82rem;padding:8px 14px">Apply</button>
+
+    <!-- Trial Picker Modal -->
+    <div id="trialPickerOverlay" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Choose Trials</h3>
+                <button id="closePickerBtn" type="button" class="modal-close">&times;</button>
+            </div>
+            <div id="pickerFilterBar" class="outcome-filter"></div>
+            <input id="pickerSearch" type="text" class="modal-search" placeholder="Search participant, condition, outcome&hellip;" />
+            <p class="muted" style="margin:4px 0"><span id="pickerCount">0 selected</span> &mdash; check trials then Apply.</p>
+            <div class="modal-list" id="pickerList"></div>
+            <div class="modal-actions">
+                <button id="pickerSelectAll" type="button">Select All Visible</button>
+                <button id="pickerClearAll" type="button">Clear Visible</button>
+                <button id="pickerReset" type="button">Reset to Default</button>
+                <button id="pickerApply" type="button" class="primary">Apply</button>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
-<script src="/cards-analysis/app.js"></script>
+
+    <script>
+        window.CARDS_CONFIG = {
+            parentOrigin: window.location.origin
+        };
+
+        (function () {
+            const tabs   = document.querySelectorAll('.page-tab');
+            const panels = document.querySelectorAll('.page-panel');
+            var chartsRendered = false;
+
+            function showPanel(id) {
+                panels.forEach(function (p) { p.classList.toggle('active', p.id === 'panel-' + id); });
+                tabs.forEach(function (t)   { t.classList.toggle('active', t.dataset.panel === id); });
+                if (id === 'statistics') {
+                    if (!chartsRendered) {
+                        chartsRendered = true;
+                        setTimeout(function () {
+                            if (typeof window.renderCharts === 'function') { window.renderCharts(); }
+                        }, 80);
+                    } else {
+                        setTimeout(function () {
+                            document.querySelectorAll('[id$="Chart"]').forEach(function (el) {
+                                if (el.children.length) { Plotly.relayout(el, {}); }
+                            });
+                        }, 60);
+                    }
+                }
+            }
+
+            tabs.forEach(function (tab) {
+                tab.addEventListener('click', function () { showPanel(tab.dataset.panel); });
+            });
+        })();
+    </script>
+    <script src="app.js"></script>    <script>
+        (function () {
+            function sendHeight() {
+                if (!window.parent || window.parent === window) return;
+                window.parent.postMessage({ type: 'cards-embed-height', height: document.documentElement.scrollHeight }, window.location.origin);
+            }
+            window.addEventListener('load', sendHeight);
+            window.addEventListener('resize', sendHeight);
+            setInterval(sendHeight, 900);
+        })();
+    </script>
 </body>
 </html>
-
-
-
 
 

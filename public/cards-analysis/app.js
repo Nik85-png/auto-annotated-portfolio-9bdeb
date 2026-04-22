@@ -2,18 +2,18 @@
     1: { title: 'Successful Clean Patterns (Many Moves)', explanation: 'Successful participants with many exploratory moves while keeping structure.' },
     2: { title: 'Failed Messy Patterns (Few Moves)', explanation: 'Failed trials where organization breaks down early.' },
     3: { title: 'All Successful Trials', explanation: 'All success outcomes to compare multiple winning paths.' },
-    4: { title: 'In-Trial Progression (Early vs Late)', explanation: 'Grid highlights move phases: blue border = early (first 1/3 of moves), orange border = late (last 1/3).' },
+    4: { title: 'In-Trial Progression (Early vs Late)', explanation: 'Shows the strongest within-trial shifts: trials that became more organized versus trials that became less organized. Blue border = early moves, orange border = late moves.' },
     5: { title: 'Opening Strategies (First 5 Moves)', explanation: 'First moves that shape final outcomes.' },
-    6: { title: 'Retry and Recovery Patterns', explanation: 'All valid trials are included, with failed trials listed first so recovery comparisons are easier.' },
-    7: { title: 'Extreme Cases (Cleanest vs Messiest)', explanation: 'Best and worst spatial organization cases.' },
-    8: { title: 'Speed Comparison (Quick vs Slow Solvers)', explanation: 'Efficiency versus exploration in successful runs.' },
+    6: { title: 'Repeated Attempts and Success Recovery', explanation: 'Only participants with multiple usable trials are shown, so retry/progression comparisons are meaningful. Mixed participants have both failed and successful attempts.' },
+    7: { title: 'Extreme Cases by Outcome', explanation: 'Cleanest and messiest successful trials plus cleanest and messiest failed trials.' },
+    8: { title: 'Speed Comparison (Quick vs Slow Solvers)', explanation: 'Quickest successful solvers compared with slowest successful solvers.' },
     9: { title: 'Card Repetition Patterns', explanation: 'Focused repetition versus broad exploration.' }
 };
 
 const state = {
     data: null,
     analysis: [],
-    allValidTrials: [],
+    allValidTrials: [],          // full deduplicated pool for trial picker
     currentAnalysisIdx: 0,
     currentTrialIdx: 0,
     currentMoveIdx: 0,
@@ -21,104 +21,194 @@ const state = {
     showingFinalState: false,
     speed: 800,
     timer: null,
-    outcomeFilter: 'all',
-    customPickedKeys: null,
+    outcomeFilter: 'all',        // 'all' | 'success' | 'fail' | 'clean' | 'messy'
+    customPickedKeys: null,      // null = use analysis pool; Set<string> = user picks
     selectedParticipant: 'all'
 };
 
-const MIN_VALID_MOVES = 6;
-const EMBED_MIN = 520;
-const EMBED_MAX = 1800;
-const HEIGHT_THRESHOLD = 8;
-let lastSentHeight = 0;
-let heightTimer = null;
-
 const $ = (id) => document.getElementById(id);
+const MIN_VALID_MOVES = 6;
 
 function isBlank(card) {
     if (!card) return false;
     return card.is_blank === true || String(card.value || '').toUpperCase() === 'BLANK';
 }
 
-function numeric(v) {
-    return typeof v === 'number' && Number.isFinite(v) ? v : Number(v) || 0;
+function initTabs() {
+    // Flask standalone uses one-page layout without section tabs.
 }
 
-function avg(arr) {
-    if (!arr.length) return 0;
-    return arr.reduce((sum, v) => sum + numeric(v), 0) / arr.length;
-}
-
-function rate(part, total) {
-    if (!total) return 0;
-    return (part / total) * 100;
-}
-
-function setupTabs() {
-    document.querySelectorAll('.tab').forEach((tab) => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
-            document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
-            tab.classList.add('active');
-            const panel = $(tab.dataset.panel);
-            if (panel) panel.classList.add('active');
-            scheduleEmbedHeight(false);
-            resizeCharts();
-        });
-    });
-}
-
-function setupEmbedMode() {
-    const embedMode = new URLSearchParams(window.location.search).get('embed') === '1';
-    if (!embedMode) return;
-    document.body.classList.add('embed-mode');
-    const tabs = document.querySelector('.tabs');
-    const overview = $('overview');
-    const stats = $('statistics');
-    const animations = $('animations');
-    if (tabs) tabs.style.display = 'none';
-    if (overview) overview.classList.remove('active');
-    if (stats) stats.classList.remove('active');
-    if (animations) animations.classList.add('active');
-
-    if (typeof ResizeObserver !== 'undefined') {
-        const ro = new ResizeObserver(() => scheduleEmbedHeight(false));
-        ro.observe($('cardsContainer'));
+async function loadData() {
+    try {
+        const res = await fetch('/data/card_analysis_data.json', { cache: 'no-store' });
+        state.data = await res.json();
+    } catch (error) {
+        state.data = { analysis_types: [], statistics: {} };
     }
-    window.addEventListener('resize', () => scheduleEmbedHeight(false));
-    window.addEventListener('load', () => scheduleEmbedHeight(true));
-    scheduleEmbedHeight(true);
-}
-
-function postEmbedHeight(force = false) {
-    if (!document.body.classList.contains('embed-mode')) return;
-    const root = $('cardsContainer');
-    if (!root) return;
-    const measured = Math.ceil(root.getBoundingClientRect().height);
-    const clamped = Math.max(EMBED_MIN, Math.min(EMBED_MAX, measured));
-    if (!force && Math.abs(clamped - lastSentHeight) <= HEIGHT_THRESHOLD) return;
-    lastSentHeight = clamped;
-    window.parent.postMessage({ type: 'cards-embed-height', height: clamped }, window.location.origin);
-}
-
-function scheduleEmbedHeight(force = false) {
-    if (!document.body.classList.contains('embed-mode')) return;
-    clearTimeout(heightTimer);
-    heightTimer = setTimeout(() => postEmbedHeight(force), 120);
+    state.analysis = buildAnalysisData(state.data);
 }
 
 function renderStats() {
     const stats = state.data?.statistics || {};
-    const total = Number(stats.total_trials || 229);
-    const successRate = Number(stats.success_rate || 46.7);
-    const blankRate = Number(stats.blank_card_success_rate || 73.3);
-    const noBlankRate = Number(stats.no_blank_success_rate || 37.3);
-    $('statsBar').innerHTML = [
-        ['Total Trials', total],
-        ['Success Rate', `${successRate.toFixed(1)}%`],
-        ['Success With Blank', `${blankRate.toFixed(1)}%`],
-        ['Success Without Blank', `${noBlankRate.toFixed(1)}%`]
-    ].map(([label, value]) => `<div class="stat"><div class="value">${value}</div><div class="label">${label}</div></div>`).join('');
+    const markup = [
+        ['Total Trials', Number(stats.total_trials || 766)],
+        ['Success Rate', `${Number(stats.success_rate || 46.7).toFixed(1)}%`],
+        ['Success With Blank', `${Number(stats.blank_card_success_rate || 73.3).toFixed(1)}%`],
+        ['Success Without Blank', `${Number(stats.no_blank_success_rate || 37.3).toFixed(1)}%`]
+    ]
+        .map(([label, value]) => `<div class="stat-card"><div class="stat-value">${value}</div><div class="stat-label">${label}</div></div>`)
+        .join('');
+    $('stats').innerHTML = markup;
+    const statsPanelMetrics = $('statsPanelMetrics');
+    if (statsPanelMetrics) statsPanelMetrics.innerHTML = markup;
+}
+
+function currentAnalysis() {
+    return state.analysis[state.currentAnalysisIdx] || { trials: [] };
+}
+
+function currentTrial() {
+    return getDisplayTrials()[state.currentTrialIdx] || null;
+}
+
+function renderAnalysisSelect() {
+    const select = $('analysisSelect');
+    select.innerHTML = '';
+    state.analysis.forEach((analysis, idx) => {
+        const opt = document.createElement('option');
+        opt.value = String(idx);
+        opt.textContent = analysis.title || `Analysis ${analysis.id}`;
+        select.appendChild(opt);
+    });
+    select.value = String(state.currentAnalysisIdx);
+    select.onchange = () => {
+        state.currentAnalysisIdx = parseInt(select.value, 10) || 0;
+        state.currentTrialIdx = 0;
+        state.currentMoveIdx = 0;
+        state.showingFinalState = false;
+        state.outcomeFilter = 'all';
+        state.customPickedKeys = null;
+        state.selectedParticipant = 'all';
+        stopPlayback();
+        if ($('finalStateBtn')) $('finalStateBtn').classList.remove('active');
+        if ($('modeIndicator')) $('modeIndicator').classList.remove('active');
+        renderAnalysisExplanation();
+        renderOutcomeFilter();
+        renderParticipantSelect();
+        renderTrialSelect();
+        renderTrial();
+    };
+    renderAnalysisExplanation();
+}
+
+function renderAnalysisExplanation() {
+    $('analysisExplanation').textContent = currentAnalysis().explanation || '';
+}
+
+function renderTrialSelect() {
+    const select = $('trialSelect');
+    const trials = getDisplayTrials();
+    select.innerHTML = '';
+    if (trials.length === 0) {
+        select.innerHTML = '<option>No trials match current filters</option>';
+        return;
+    }
+    trials.forEach((trial, idx) => {
+        const participant = trial.participant || 'N/A';
+        const outcome = trial.outcome === 'success' ? 'SUCCESS' : 'FAIL';
+        const condition = trial.condition || 'N/A';
+        const moves = Number(trial.move_count ?? (trial.moves || []).length);
+        const blankTag = (trial.blank_card_count || 0) > 0 || hasBlankInFinal(trial) ? ' [blank]' : '';
+        let recoveryTag = '';
+        if (currentAnalysis().id === 6) {
+            const group = (currentAnalysis().trials || []).filter((t) => String(t.participant || 'N/A') === String(participant));
+            const outcomes = new Set(group.map((t) => t.outcome));
+            const hasRecovery = outcomes.has('success') && outcomes.has('fail');
+            if (trial.outcome === 'success') {
+                recoveryTag = ` | ${hasRecovery ? 'SUCCESS RECOVERY' : 'SUCCESSFUL REPEAT'}`;
+            } else {
+                recoveryTag = ' | FAILED ATTEMPT';
+            }
+        }
+        const trialNumTag =
+            currentAnalysis().id === 6 && Number.isFinite(Number(trial.trial_number))
+                ? ` | Trial #${Number(trial.trial_number) + 1}`
+                : '';
+        const messinessTag =
+            currentAnalysis().id === 6
+                ? ` | mess ${typeof trial.messiness_score === 'number' ? trial.messiness_score.toFixed(2) : 'N/A'}`
+                : '';
+        const progressionTag = currentAnalysis().id === 4
+            ? ` | ${trial.progression_label || 'Progression case'}${typeof trial.progression_delta === 'number' ? ` (${trial.progression_delta > 0 ? '+' : ''}${trial.progression_delta.toFixed(2)})` : ''}`
+            : '';
+        const extremeTag = currentAnalysis().id === 7 && trial.extreme_label ? ` | ${trial.extreme_label}` : '';
+        const speedTag = currentAnalysis().id === 8 && trial.speed_label ? ` | ${trial.speed_label}` : '';
+        const opt = document.createElement('option');
+        opt.value = String(idx);
+        opt.textContent = `Trial ${idx + 1} [P${participant}] ${outcome} | ${condition}${trialNumTag} | ${moves} moves${messinessTag}${progressionTag}${extremeTag}${speedTag}${blankTag}${recoveryTag}`;
+        select.appendChild(opt);
+    });
+    select.value = String(state.currentTrialIdx);
+    select.onchange = () => {
+        state.currentTrialIdx = parseInt(select.value, 10) || 0;
+        state.currentMoveIdx = 0;
+        state.showingFinalState = false;
+        stopPlayback();
+        if ($('finalStateBtn')) $('finalStateBtn').classList.remove('active');
+        if ($('modeIndicator')) $('modeIndicator').classList.remove('active');
+        renderTrial();
+    };
+}
+
+function renderParticipantSelect() {
+    const wrap = $('participantSelectWrap');
+    const select = $('participantSelect');
+    if (!wrap || !select) return;
+
+    const isRecovery = currentAnalysis().id === 6;
+    if (!isRecovery) {
+        wrap.style.display = 'none';
+        select.innerHTML = '';
+        state.selectedParticipant = 'all';
+        return;
+    }
+
+    wrap.style.display = 'block';
+    let pool;
+    if (state.customPickedKeys) {
+        pool = (state.allValidTrials || []).filter((t) => state.customPickedKeys.has(trialIdKey(t)));
+    } else {
+        pool = currentAnalysis().trials || [];
+    }
+
+    const meta = getRecoveryParticipantMeta(pool);
+    const options = [{ value: 'all', label: `All Repeat Participants (${meta.length})` }].concat(
+        meta.map((m, idx) => {
+            const pairTag = m.hasBoth ? ' mixed' : '';
+            return {
+                value: m.participant,
+                label: `#${idx + 1} P${m.participant} (${m.count} trials${pairTag})`
+            };
+        })
+    );
+
+    if (!options.some((o) => o.value === state.selectedParticipant)) {
+        state.selectedParticipant = 'all';
+    }
+
+    select.innerHTML = options.map((o) => `<option value="${o.value}">${o.label}</option>`).join('');
+    select.value = state.selectedParticipant;
+    select.onchange = () => {
+        state.selectedParticipant = select.value;
+        state.currentTrialIdx = 0;
+        state.currentMoveIdx = 0;
+        state.showingFinalState = false;
+        stopPlayback();
+        if ($('finalStateBtn')) $('finalStateBtn').classList.remove('active');
+        if ($('modeIndicator')) $('modeIndicator').classList.remove('active');
+        renderTrialSelect();
+        renderTrial();
+    };
 }
 
 function trialMoveCount(trial) {
@@ -126,15 +216,33 @@ function trialMoveCount(trial) {
 }
 
 function normalizeTrial(trial) {
-    const moves = Array.isArray(trial.moves)
-        ? trial.moves.filter((m) => Number.isInteger(m?.row) && Number.isInteger(m?.col))
+    const moves = Array.isArray(trial.moves) ? trial.moves.filter((m) => Number.isInteger(m?.row) && Number.isInteger(m?.col)) : [];
+    const finalState = Array.isArray(trial.final_state)
+        ? trial.final_state.filter((m) => Number.isInteger(m?.row) && Number.isInteger(m?.col))
         : [];
+    const blankCardCount = Number(
+        trial.blank_card_count
+        || finalState.filter((card) => isBlank(card)).length
+        || 0
+    );
+    const moveCount = trialMoveCount({ ...trial, moves });
     return {
         ...trial,
         moves,
-        move_count: trialMoveCount({ ...trial, moves }),
-        blank_card_count: Number(trial.blank_card_count || 0)
+        final_state: finalState,
+        move_count: moveCount,
+        blank_card_count: blankCardCount
     };
+}
+
+function hasBlankInFinal(trial) {
+    if (!Array.isArray(trial?.final_state)) return false;
+    return trial.final_state.some((card) => isBlank(card));
+}
+
+function countBlankInFinal(trial) {
+    if (!Array.isArray(trial?.final_state)) return 0;
+    return trial.final_state.filter((card) => isBlank(card)).length;
 }
 
 function trialIdKey(trial) {
@@ -153,8 +261,26 @@ function trialIdKey(trial) {
 
 function dedupeTrials(trials) {
     const map = new Map();
-    trials.forEach((t) => map.set(trialIdKey(t), t));
+    trials.forEach((trial) => {
+        map.set(trialIdKey(trial), trial);
+    });
     return Array.from(map.values());
+}
+
+function repeatParticipants(trials) {
+    const byP = new Map();
+    trials.forEach((t) => {
+        const p = String(t.participant || 'N/A');
+        if (!byP.has(p)) byP.set(p, []);
+        byP.get(p).push(t);
+    });
+    return Array.from(byP.entries())
+        .filter(([, list]) => list.length > 1)
+        .sort((a, b) => b[1].length - a[1].length);
+}
+
+function repeatedParticipantTrials(trials) {
+    return repeatParticipants(trials).flatMap(([, list]) => list);
 }
 
 function messiness(trial) {
@@ -270,6 +396,57 @@ function sortTrialsForRecovery(trials) {
     return ordered;
 }
 
+function withTrialMeta(trial, meta) {
+    return { ...trial, ...meta };
+}
+
+function progressionCases(trials, limitPerSide = 12) {
+    const enriched = trials
+        .filter((t) => (t.moves || []).length >= 6)
+        .map((t) => ({ trial: t, delta: progressionDelta(t) }));
+    const improved = enriched
+        .filter(({ delta }) => delta < 0)
+        .sort((a, b) => a.delta - b.delta)
+        .slice(0, limitPerSide)
+        .map(({ trial, delta }) => withTrialMeta(trial, {
+            progression_label: 'Became more organized',
+            progression_delta: Number(delta.toFixed(3))
+        }));
+    const deteriorated = enriched
+        .filter(({ delta }) => delta > 0)
+        .sort((a, b) => b.delta - a.delta)
+        .slice(0, limitPerSide)
+        .map(({ trial, delta }) => withTrialMeta(trial, {
+            progression_label: 'Became less organized',
+            progression_delta: Number(delta.toFixed(3))
+        }));
+    return improved.concat(deteriorated);
+}
+
+function extremeCasesByOutcome(success, fail, limitPerGroup = 6) {
+    const cases = [];
+    [
+        ['successful', success],
+        ['failed', fail]
+    ].forEach(([label, pool]) => {
+        const sorted = [...pool].sort((a, b) => messiness(a) - messiness(b));
+        sorted.slice(0, limitPerGroup).forEach((trial) => {
+            cases.push(withTrialMeta(trial, { extreme_label: `Cleanest ${label}` }));
+        });
+        sorted.slice(-limitPerGroup).forEach((trial) => {
+            cases.push(withTrialMeta(trial, { extreme_label: `Messiest ${label}` }));
+        });
+    });
+    return cases;
+}
+
+function speedCases(success, limitPerSide = 8) {
+    const sorted = [...success].sort((a, b) => a.move_count - b.move_count);
+    return sorted.slice(0, limitPerSide)
+        .map((trial) => withTrialMeta(trial, { speed_label: 'Quick successful solver' }))
+        .concat(sorted.slice(-limitPerSide).map((trial) => withTrialMeta(trial, { speed_label: 'Slow successful solver' })));
+}
+
 function sortTrialsByTrialNumber(trials) {
     return [...trials].sort((a, b) => {
         const at = Number(a?.trial_number);
@@ -283,39 +460,46 @@ function sortTrialsByTrialNumber(trials) {
 }
 
 function buildAnalysisData(data) {
-    const rawAnalyses = Array.isArray(data?.analysis_types) ? data.analysis_types : [];
+    const rawAnalyses = data.analysis_types || [];
     const allRaw = rawAnalyses.flatMap((a) => (a.trials || []).map((t) => normalizeTrial(t)));
     const nonEmptyRaw = allRaw.filter((t) => t.moves.length > 0);
     const nonEmpty = dedupeTrials(nonEmptyRaw);
-    const valid = nonEmpty.filter((t) => t.move_count >= MIN_VALID_MOVES);
+    const validAll = nonEmptyRaw.filter((t) => t.move_count >= MIN_VALID_MOVES);
+    const valid = dedupeTrials(validAll);
     const success = valid.filter((t) => t.outcome === 'success');
     const fail = valid.filter((t) => t.outcome !== 'success');
-
+    const repeated = repeatParticipants(nonEmpty);
+    const repeatedMixed = repeated.filter(([, list]) => {
+        const outcomes = new Set(list.map((t) => t.outcome));
+        return outcomes.has('success') && outcomes.has('fail');
+    });
+    // Store full pool for trial picker and outcome filter
     state.allValidTrials = valid;
-
-    const byId = {};
-    rawAnalyses.forEach((a) => { byId[a.id] = a; });
 
     const idToTrials = {
         1: success.filter((t) => t.move_count >= 15).slice(0, 24),
         2: fail.filter((t) => t.move_count < 15).slice(0, 24),
         3: success.slice(0, 32),
-        4: [...valid].sort((a, b) => Math.abs(progressionDelta(b)) - Math.abs(progressionDelta(a))),
-        5: valid.filter((t) => t.moves.length >= 5).slice(0, 32).map((t) => ({ ...t, moves: t.moves.slice(0, 5), move_count: 5 })),
-        6: sortTrialsForRecovery(nonEmptyRaw),
-        7: (() => {
-            const sorted = [...valid].sort((a, b) => messiness(a) - messiness(b));
-            return [...sorted.slice(0, 6), ...sorted.slice(-6)];
-        })(),
-        8: (() => {
-            const sorted = [...success].sort((a, b) => a.move_count - b.move_count);
-            return [...sorted.slice(0, 8), ...sorted.slice(-8)];
-        })(),
+        // Analysis 4: strongest improved and deteriorated within-trial progression cases.
+        4: progressionCases(valid),
+        5: valid
+            .filter((t) => t.moves.length >= 5)
+            .slice(0, 32)
+            .map((t) => ({ ...t, moves: t.moves.slice(0, 5), move_count: 5 })),
+        // Analysis 6: repeated participants only; single trials cannot show retry/progression.
+        6: sortTrialsForRecovery(repeatedParticipantTrials(nonEmptyRaw)),
+        7: extremeCasesByOutcome(success, fail),
+        8: speedCases(success),
         9: (() => {
             const sorted = [...valid].sort((a, b) => repetitionRatio(b) - repetitionRatio(a));
             return [...sorted.slice(0, 8), ...sorted.slice(-8)];
         })()
     };
+
+    const byId = {};
+    rawAnalyses.forEach((a) => {
+        byId[a.id] = a;
+    });
 
     return [1, 2, 3, 4, 5, 6, 7, 8, 9].map((id) => {
         const base = byId[id] || { id, title: `Analysis ${id}`, trials: [] };
@@ -333,235 +517,13 @@ function buildAnalysisData(data) {
     });
 }
 
-function currentAnalysis() {
-    return state.analysis[state.currentAnalysisIdx] || { id: -1, trials: [] };
-}
-
-function messinessThresholds() {
-    const scores = (state.allValidTrials || [])
-        .map((t) => messiness(t))
-        .filter(Number.isFinite)
-        .sort((a, b) => a - b);
-    if (scores.length < 6) return { cleanMax: 1.5, messyMin: 3.0 };
-    return {
-        cleanMax: scores[Math.floor(scores.length * 0.33)],
-        messyMin: scores[Math.floor(scores.length * 0.67)]
-    };
-}
-
-function getDisplayTrials() {
-    let pool;
-    if (state.customPickedKeys) {
-        pool = (state.allValidTrials || []).filter((t) => state.customPickedKeys.has(trialIdKey(t)));
-    } else {
-        pool = currentAnalysis().trials || [];
-    }
-    if (currentAnalysis().id === 6) {
-        pool = sortTrialsByTrialNumber(pool);
-        if (state.selectedParticipant !== 'all') {
-            pool = pool.filter((t) => String(t.participant || 'N/A') === state.selectedParticipant);
-            pool = sortTrialsByTrialNumber(pool);
-        }
-    }
-    if (state.outcomeFilter === 'all') return pool;
-    const { cleanMax, messyMin } = messinessThresholds();
-    if (state.outcomeFilter === 'success') return pool.filter((t) => t.outcome === 'success');
-    if (state.outcomeFilter === 'fail') return pool.filter((t) => t.outcome !== 'success');
-    if (state.outcomeFilter === 'clean') return pool.filter((t) => messiness(t) <= cleanMax);
-    if (state.outcomeFilter === 'messy') return pool.filter((t) => messiness(t) >= messyMin);
-    return pool;
-}
-
-function currentTrial() {
-    return getDisplayTrials()[state.currentTrialIdx] || null;
-}
-
-function renderAnalysisSelect() {
-    const select = $('analysisType');
-    select.innerHTML = '';
-    state.analysis.forEach((a, idx) => {
-        const opt = document.createElement('option');
-        opt.value = String(idx);
-        opt.textContent = a.title || `Analysis ${a.id}`;
-        select.appendChild(opt);
-    });
-    select.value = String(state.currentAnalysisIdx);
-    select.onchange = () => {
-        state.currentAnalysisIdx = parseInt(select.value, 10) || 0;
-        state.currentTrialIdx = 0;
-        state.currentMoveIdx = 0;
-        state.showingFinalState = false;
-        state.outcomeFilter = 'all';
-        state.customPickedKeys = null;
-        state.selectedParticipant = 'all';
-        stopPlayback();
-        $('finalStateBtn').classList.remove('active');
-        $('modeIndicator').classList.remove('active');
-        renderAnalysisExplanation();
-        renderOutcomeFilter();
-        renderParticipantSelect();
-        renderTrialSelect();
-        renderTrial();
-    };
-}
-
-function renderAnalysisExplanation() {
-    $('analysisText').textContent = currentAnalysis().explanation || '';
-}
-
-function renderOutcomeFilter() {
-    const el = $('outcomeFilter');
-    if (!el) return;
-    if (currentAnalysis().id === 4) {
-        state.outcomeFilter = 'all';
-        el.style.display = 'none';
-        el.innerHTML = '';
-        return;
-    }
-    el.style.display = 'flex';
-    const filters = [
-        { key: 'all', label: 'All' },
-        { key: 'success', label: 'Success' },
-        { key: 'fail', label: 'Failed' },
-        { key: 'clean', label: 'Clean' },
-        { key: 'messy', label: 'Messy' }
-    ];
-    el.innerHTML = filters
-        .map((f) => `<button type="button" class="filter-chip${state.outcomeFilter === f.key ? ' active' : ''}" data-filter="${f.key}">${f.label}</button>`)
-        .join('');
-    el.querySelectorAll('.filter-chip').forEach((btn) => {
-        btn.addEventListener('click', () => {
-            state.outcomeFilter = btn.dataset.filter;
-            state.currentTrialIdx = 0;
-            state.currentMoveIdx = 0;
-            state.showingFinalState = false;
-            stopPlayback();
-            $('finalStateBtn').classList.remove('active');
-            $('modeIndicator').classList.remove('active');
-            renderOutcomeFilter();
-            renderTrialSelect();
-            renderTrial();
-        });
-    });
-
-    const pickerBtn = $('openPickerBtn');
-    if (pickerBtn) {
-        pickerBtn.textContent = state.customPickedKeys
-            ? `Choose Trials (${state.customPickedKeys.size} picked)`
-            : 'Choose Trials...';
-    }
-}
-
-function renderParticipantSelect() {
-    const wrap = $('participantSelectWrap');
-    const select = $('participantSelect');
-    if (!wrap || !select) return;
-
-    const isRecovery = currentAnalysis().id === 6;
-    if (!isRecovery) {
-        wrap.style.display = 'none';
-        select.innerHTML = '';
-        state.selectedParticipant = 'all';
-        return;
-    }
-
-    wrap.style.display = 'block';
-    let pool;
-    if (state.customPickedKeys) {
-        pool = (state.allValidTrials || []).filter((t) => state.customPickedKeys.has(trialIdKey(t)));
-    } else {
-        pool = currentAnalysis().trials || [];
-    }
-
-    const meta = getRecoveryParticipantMeta(pool);
-    const options = [{ value: 'all', label: `All Participants (${meta.length})` }].concat(
-        meta.map((m, idx) => {
-            const pairTag = m.hasBoth ? ' mixed' : '';
-            return {
-                value: m.participant,
-                label: `#${idx + 1} P${m.participant} (${m.count} trials${pairTag})`
-            };
-        })
-    );
-
-    if (!options.some((o) => o.value === state.selectedParticipant)) {
-        state.selectedParticipant = 'all';
-    }
-
-    select.innerHTML = options.map((o) => `<option value="${o.value}">${o.label}</option>`).join('');
-    select.value = state.selectedParticipant;
-    select.onchange = () => {
-        state.selectedParticipant = select.value;
-        state.currentTrialIdx = 0;
-        state.currentMoveIdx = 0;
-        state.showingFinalState = false;
-        stopPlayback();
-        $('finalStateBtn').classList.remove('active');
-        $('modeIndicator').classList.remove('active');
-        renderTrialSelect();
-        renderTrial();
-    };
-}
-
-function renderTrialSelect() {
-    const select = $('trialSelect');
-    const trials = getDisplayTrials();
-    select.innerHTML = '';
-    if (!trials.length) {
-        select.innerHTML = '<option>No trials match current filters</option>';
-        return;
-    }
-    trials.forEach((trial, idx) => {
-        const participant = trial.participant || 'N/A';
-        const outcome = trial.outcome === 'success' ? 'SUCCESS' : 'FAIL';
-        const condition = trial.condition || 'N/A';
-        const moves = Number(trial.move_count ?? (trial.moves || []).length);
-        const blankTag = (trial.blank_card_count || 0) > 0 || hasBlankInFinal(trial) ? ' [blank]' : '';
-        const recoveryTag = currentAnalysis().id === 6 ? ` | ${trial.outcome === 'success' ? 'SUCCESS RECOVERY' : 'FAILED ATTEMPT'}` : '';
-        const trialNumTag =
-            currentAnalysis().id === 6 && Number.isFinite(Number(trial.trial_number))
-                ? ` | Trial #${Number(trial.trial_number) + 1}`
-                : '';
-        const messinessTag =
-            currentAnalysis().id === 6
-                ? ` | mess ${typeof trial.messiness_score === 'number' ? trial.messiness_score.toFixed(2) : 'N/A'}`
-                : '';
-        const opt = document.createElement('option');
-        opt.value = String(idx);
-        opt.textContent = `Trial ${idx + 1} [P${participant}] ${outcome} | ${condition}${trialNumTag} | ${moves} moves${messinessTag}${blankTag}${recoveryTag}`;
-        select.appendChild(opt);
-    });
-    select.value = String(state.currentTrialIdx);
-    select.onchange = () => {
-        state.currentTrialIdx = parseInt(select.value, 10) || 0;
-        state.currentMoveIdx = 0;
-        state.showingFinalState = false;
-        stopPlayback();
-        $('finalStateBtn').classList.remove('active');
-        $('modeIndicator').classList.remove('active');
-        renderTrial();
-    };
-}
-
-function hasBlankInFinal(trial) {
-    if (!Array.isArray(trial?.final_state)) return false;
-    return trial.final_state.some((c) => isBlank(c));
-}
-
-function countBlankInFinal(trial) {
-    if (!Array.isArray(trial?.final_state)) return 0;
-    return trial.final_state.filter((c) => isBlank(c)).length;
-}
-
 function renderGrid() {
     const trial = currentTrial();
     const root = $('grid');
     root.innerHTML = '';
-
-    root.innerHTML += '<div class="cell head"></div>';
-    for (let c = 0; c < 8; c++) root.innerHTML += `<div class="cell head">${c}</div>`;
-
     if (!trial) {
+        root.innerHTML += '<div class="cell head"></div>';
+        for (let c = 0; c < 8; c++) root.innerHTML += `<div class="cell head">${c}</div>`;
         for (let r = 0; r < 8; r++) {
             root.innerHTML += `<div class="cell head">${r}</div>`;
             for (let c = 0; c < 8; c++) root.innerHTML += '<div class="cell empty"></div>';
@@ -570,7 +532,7 @@ function renderGrid() {
         return;
     }
 
-    const isProgression = currentAnalysis().id === 4;
+    const isProgression = (state.analysis[state.currentAnalysisIdx]?.id === 4);
     const moves = trial.moves || [];
     const totalMoves = moves.length;
     const gridState = {};
@@ -582,13 +544,16 @@ function renderGrid() {
             }
         });
     } else {
-        for (let i = 0; i <= state.currentMoveIdx && i < totalMoves; i++) {
+        for (let i = 0; i <= state.currentMoveIdx && i < moves.length; i++) {
             const m = moves[i];
             if (Number.isInteger(m?.row) && Number.isInteger(m?.col)) {
                 gridState[`${m.row}-${m.col}`] = { ...m, current: i === state.currentMoveIdx, arrayIndex: i };
             }
         }
     }
+
+    root.innerHTML += '<div class="cell head"></div>';
+    for (let c = 0; c < 8; c++) root.innerHTML += `<div class="cell head">${c}</div>`;
 
     for (let r = 0; r < 8; r++) {
         root.innerHTML += `<div class="cell head">${r}</div>`;
@@ -607,9 +572,16 @@ function renderGrid() {
                 else if (ai >= totalMoves - seg) phaseClass = ' phase-late';
             }
             const cls = `cell card-cell${m.current ? ' current' : ''}${blank ? ' blank' : ''}${phaseClass}`;
-            const symbol = blank ? '&#9633;' : `${m.value || ''}${m.suit_symbol || ''}`;
-            const color = blank ? '#ffffff' : (m.color === 'red' ? '#dc2626' : '#111827');
-            root.innerHTML += `<div class="${cls}" style="color:${color}">${symbol}</div>`;
+            let cardInner;
+            if (blank) {
+                cardInner = '<span class="card-suit-big" style="color:#a3a3a3;font-size:18px">&#9723;</span>';
+            } else {
+                const val = m.value || '';
+                const suit = m.suit_symbol || '';
+                const col = m.color === 'red' ? '#dc2626' : '#111827';
+                cardInner = `<span class="card-corner" style="color:${col}">${val}<br>${suit}</span><span class="card-suit-big" style="color:${col}">${suit}</span>`;
+            }
+            root.innerHTML += `<div class="${cls}">${cardInner}</div>`;
         }
     }
 
@@ -617,7 +589,7 @@ function renderGrid() {
         const finalCards = Array.isArray(trial.final_state) ? trial.final_state.length : 0;
         $('moveCounter').textContent = `Final State: ${finalCards} cards placed`;
     } else {
-        const current = totalMoves ? Math.min(state.currentMoveIdx + 1, totalMoves) : 0;
+        const current = totalMoves === 0 ? 0 : Math.min(state.currentMoveIdx + 1, totalMoves);
         $('moveCounter').textContent = `Move ${current} / ${totalMoves}`;
     }
 }
@@ -642,10 +614,9 @@ function renderTrialInfo() {
 }
 
 function renderTrial() {
-    renderAnalysisExplanation();
     renderGrid();
     renderTrialInfo();
-    scheduleEmbedHeight(false);
+    scheduleEmbedHeight();
 }
 
 function stopPlayback() {
@@ -677,30 +648,37 @@ function togglePlayback() {
 
 function toggleFinalState() {
     state.showingFinalState = !state.showingFinalState;
+    const finalStateBtn = $('finalStateBtn');
+    const modeIndicator = $('modeIndicator');
     if (state.showingFinalState) {
         stopPlayback();
-        $('finalStateBtn').classList.add('active');
-        $('finalStateBtn').textContent = 'Show Animation';
-        $('modeIndicator').classList.add('active');
+        if (finalStateBtn) {
+            finalStateBtn.classList.add('active');
+            finalStateBtn.textContent = 'Show Animation';
+        }
+        if (modeIndicator) modeIndicator.classList.add('active');
     } else {
-        $('finalStateBtn').classList.remove('active');
-        $('finalStateBtn').textContent = 'Show Final State';
-        $('modeIndicator').classList.remove('active');
+        if (finalStateBtn) {
+            finalStateBtn.classList.remove('active');
+            finalStateBtn.textContent = 'Show Final State';
+        }
+        if (modeIndicator) modeIndicator.classList.remove('active');
     }
     renderTrial();
 }
 
 function bindControls() {
-    $('openPickerBtn').onclick = openTrialPicker;
-    $('pickerClose').onclick = closeTrialPicker;
-
+    if ($('openPickerBtn')) $('openPickerBtn').onclick = openTrialPicker;
+    if ($('closePickerBtn')) $('closePickerBtn').onclick = closeTrialPicker;
     $('resetBtn').onclick = () => {
         stopPlayback();
         state.currentMoveIdx = 0;
         state.showingFinalState = false;
-        $('finalStateBtn').classList.remove('active');
-        $('finalStateBtn').textContent = 'Show Final State';
-        $('modeIndicator').classList.remove('active');
+        if ($('finalStateBtn')) {
+            $('finalStateBtn').classList.remove('active');
+            $('finalStateBtn').textContent = 'Show Final State';
+        }
+        if ($('modeIndicator')) $('modeIndicator').classList.remove('active');
         renderTrial();
     };
     $('prevBtn').onclick = () => {
@@ -711,17 +689,16 @@ function bindControls() {
     };
     $('nextBtn').onclick = () => {
         if (state.showingFinalState) return;
-        stopPlayback();
         const trial = currentTrial();
+        stopPlayback();
         const max = Math.max(0, (trial?.moves || []).length - 1);
         state.currentMoveIdx = Math.min(max, state.currentMoveIdx + 1);
         renderTrial();
     };
-    $('playBtn').onclick = togglePlayback;
-    $('finalStateBtn').onclick = toggleFinalState;
-
-    $('speedControl').oninput = () => {
-        state.speed = parseInt($('speedControl').value, 10) || 800;
+    $('playBtn').onclick = () => togglePlayback();
+    if ($('finalStateBtn')) $('finalStateBtn').onclick = () => toggleFinalState();
+    $('speedRange').oninput = () => {
+        state.speed = parseInt($('speedRange').value, 10) || 800;
         const factor = (2000 - state.speed) / 1000;
         $('speedLabel').textContent = `${factor.toFixed(1)}x`;
         if (state.playing) {
@@ -729,36 +706,6 @@ function bindControls() {
             togglePlayback();
         }
     };
-}
-
-function chartLayout(yTitle, range = null) {
-    return {
-        margin: { t: 20, l: 50, r: 20, b: 50 },
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)',
-        font: { color: '#1f2937' },
-        yaxis: { title: yTitle, range: range || undefined }
-    };
-}
-
-function trialKeyForChart(trial) {
-    return [
-        trial.participant || '',
-        trial.condition || '',
-        trial.outcome || '',
-        numeric(trial.move_count ?? (trial.moves || []).length),
-        Number(numeric(trial.messiness_score).toFixed(4))
-    ].join('|');
-}
-
-function getUniqueTrials() {
-    const all = (state.analysis || []).flatMap((a) => a.trials || []);
-    const map = new Map();
-    all.forEach((trial) => {
-        const t = normalizeTrial(trial);
-        if (t.moves.length > 0) map.set(trialKeyForChart(t), t);
-    });
-    return Array.from(map.values());
 }
 
 function renderCharts() {
@@ -774,161 +721,307 @@ function renderCharts() {
     const successMessinessAvg = avg(successful.map((t) => numeric(t.messiness_score)));
     const failMessinessAvg = avg(failed.map((t) => numeric(t.messiness_score)));
 
-    Plotly.newPlot('summaryBar', [{ x: ['Total Trials', 'Successful', 'Failed'], y: [trials.length, successful.length, failed.length], type: 'bar', marker: { color: ['#667eea', '#10b981', '#ef4444'] } }], chartLayout('Count'), { displayModeBar: false, responsive: true });
-
-    Plotly.newPlot('conditionBar', [{ x: conditions, y: conditions.map((condition) => {
-        const group = trials.filter((t) => t.condition === condition);
-        return rate(group.filter((t) => t.outcome === 'success').length, group.length);
-    }), type: 'bar', marker: { color: '#2a9d8f' }, texttemplate: '%{y:.1f}%', textposition: 'outside' }], chartLayout('Success Rate (%)', [0, 100]), { displayModeBar: false, responsive: true });
-
-    Plotly.newPlot('messinessBar', [{ x: ['Success Group', 'Failure Group'], y: [successMessinessAvg, failMessinessAvg], type: 'bar', marker: { color: ['#10b981', '#ef4444'] }, texttemplate: '%{y:.2f}', textposition: 'outside' }], chartLayout('Messiness Score'), { displayModeBar: false, responsive: true });
-
-    Plotly.newPlot('moveDistBar', [
-        { x: successful.map((t) => numeric(t.move_count)), type: 'histogram', name: 'Success', opacity: 0.65, marker: { color: '#10b981' } },
-        { x: failed.map((t) => numeric(t.move_count)), type: 'histogram', name: 'Failure', opacity: 0.65, marker: { color: '#ef4444' } }
-    ], { ...chartLayout('Trials'), barmode: 'overlay', xaxis: { title: 'Move Count' } }, { displayModeBar: false, responsive: true });
-
-    Plotly.newPlot('blankCardBar', [{ x: ['With Blank Card', 'Without Blank Card'], y: [blankSuccessRate, noBlankSuccessRate], type: 'bar', marker: { color: ['#0ea5e9', '#64748b'] }, texttemplate: '%{y:.1f}%', textposition: 'outside' }], chartLayout('Success Rate (%)', [0, 100]), { displayModeBar: false, responsive: true });
-
-    Plotly.newPlot('messinessBoxBar', [
-        { y: successful.map((t) => numeric(t.messiness_score)), type: 'box', name: 'Success', marker: { color: '#10b981' }, boxmean: true },
-        { y: failed.map((t) => numeric(t.messiness_score)), type: 'box', name: 'Failure', marker: { color: '#ef4444' }, boxmean: true }
-    ], chartLayout('Messiness Score'), { displayModeBar: false, responsive: true });
+    Plotly.newPlot(
+        'summaryChart',
+        [
+            {
+                x: ['Total', 'Success', 'Failed'],
+                y: [trials.length, successful.length, failed.length],
+                type: 'bar',
+                marker: { color: ['#667eea', '#10b981', '#ef4444'] }
+            }
+        ],
+        chartLayout('Count'),
+        { displayModeBar: false, responsive: true }
+    );
+    Plotly.newPlot(
+        'conditionChart',
+        [
+            {
+                x: conditions,
+                y: conditions.map((condition) => {
+                    const group = trials.filter((t) => t.condition === condition);
+                    return rate(group.filter((t) => t.outcome === 'success').length, group.length);
+                }),
+                type: 'bar',
+                marker: { color: '#764ba2' },
+                textposition: 'outside',
+                texttemplate: '%{y:.1f}%'
+            }
+        ],
+        chartLayout('Success Rate (%)', [0, 100]),
+        { displayModeBar: false, responsive: true }
+    );
+    Plotly.newPlot(
+        'messinessChart',
+        [
+            {
+                x: ['Success', 'Failure'],
+                y: [successMessinessAvg, failMessinessAvg],
+                type: 'bar',
+                marker: { color: ['#10b981', '#ef4444'] }
+            }
+        ],
+        chartLayout('Messiness Score'),
+        { displayModeBar: false, responsive: true }
+    );
+    Plotly.newPlot(
+        'moveDistChart',
+        [
+            {
+                x: successful.map((t) => numeric(t.move_count)),
+                type: 'histogram',
+                name: 'Success',
+                opacity: 0.65,
+                marker: { color: '#10b981' }
+            },
+            {
+                x: failed.map((t) => numeric(t.move_count)),
+                type: 'histogram',
+                name: 'Failure',
+                opacity: 0.65,
+                marker: { color: '#ef4444' }
+            }
+        ],
+        {
+            ...chartLayout('Trials'),
+            barmode: 'overlay',
+            xaxis: { title: 'Move Count' }
+        },
+        { displayModeBar: false, responsive: true }
+    );
+    Plotly.newPlot(
+        'blankChart',
+        [
+            {
+                x: ['With Blank', 'Without Blank'],
+                y: [blankSuccessRate, noBlankSuccessRate],
+                type: 'bar',
+                marker: { color: ['#667eea', '#94a3b8'] },
+                textposition: 'outside',
+                texttemplate: '%{y:.1f}%'
+            }
+        ],
+        chartLayout('Success Rate (%)', [0, 100]),
+        { displayModeBar: false, responsive: true }
+    );
+    Plotly.newPlot(
+        'messinessBoxChart',
+        [
+            {
+                y: successful.map((t) => numeric(t.messiness_score)),
+                type: 'box',
+                name: 'Success',
+                marker: { color: '#10b981' },
+                boxmean: true
+            },
+            {
+                y: failed.map((t) => numeric(t.messiness_score)),
+                type: 'box',
+                name: 'Failure',
+                marker: { color: '#ef4444' },
+                boxmean: true
+            }
+        ],
+        chartLayout('Messiness Score'),
+        { displayModeBar: false, responsive: true }
+    );
 
     window.addEventListener('resize', resizeCharts);
 }
 
-function resizeCharts() {
-    ['summaryBar', 'conditionBar', 'messinessBar', 'moveDistBar', 'blankCardBar', 'messinessBoxBar'].forEach((id) => {
-        const el = $(id);
-        if (el) Plotly.Plots.resize(el);
+// Expose for lazy rendering from the page-tab switcher in index.html
+window.renderCharts = renderCharts;
+
+// Messiness thresholds for clean/messy filter
+function messinessThresholds() {
+    const all = state.allValidTrials || [];
+    const scores = all.map((t) => messiness(t)).filter(Number.isFinite).sort((a, b) => a - b);
+    if (scores.length < 6) return { cleanMax: 1.5, messyMin: 3.0 };
+    return {
+        cleanMax: scores[Math.floor(scores.length * 0.33)],
+        messyMin: scores[Math.floor(scores.length * 0.67)]
+    };
+}
+
+// Filtered trial list shown in dropdown
+function getDisplayTrials() {
+    let pool;
+    if (state.customPickedKeys) {
+        pool = (state.allValidTrials || []).filter((t) => state.customPickedKeys.has(trialIdKey(t)));
+    } else {
+        pool = currentAnalysis().trials || [];
+    }
+    if (currentAnalysis().id === 6) {
+        if (state.selectedParticipant !== 'all') {
+            pool = pool.filter((t) => String(t.participant || 'N/A') === state.selectedParticipant);
+            pool = sortTrialsByTrialNumber(pool);
+        }
+    }
+    if (state.outcomeFilter === 'all') return pool;
+    const { cleanMax, messyMin } = messinessThresholds();
+    if (state.outcomeFilter === 'success') return pool.filter((t) => t.outcome === 'success');
+    if (state.outcomeFilter === 'fail')    return pool.filter((t) => t.outcome !== 'success');
+    if (state.outcomeFilter === 'clean')   return pool.filter((t) => messiness(t) <= cleanMax);
+    if (state.outcomeFilter === 'messy')   return pool.filter((t) => messiness(t) >= messyMin);
+    return pool;
+}
+
+// Outcome filter bar
+function renderOutcomeFilter() {
+    const el = $('outcomeFilter');
+    if (!el) return;
+    const pickerBtn = $('openPickerBtn');
+    if (pickerBtn) {
+        pickerBtn.textContent = state.customPickedKeys
+            ? `Choose Trials (${state.customPickedKeys.size} picked)`
+            : 'Choose Trials\u2026';
+    }
+    if (currentAnalysis().id === 4) {
+        state.outcomeFilter = 'all';
+        el.style.display = 'none';
+        el.innerHTML = '';
+        return;
+    }
+    el.style.display = 'flex';
+    const filters = [
+        { key: 'all',     label: 'All' },
+        { key: 'success', label: 'Success' },
+        { key: 'fail',    label: 'Failed' },
+        { key: 'clean',   label: 'Clean (low mess)' },
+        { key: 'messy',   label: 'Messy (high mess)' }
+    ];
+    el.innerHTML = filters
+        .map((f) => `<button type="button" class="filter-btn${state.outcomeFilter === f.key ? ' active' : ''}" data-filter="${f.key}">${f.label}</button>`)
+        .join('');
+    el.querySelectorAll('.filter-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            state.outcomeFilter = btn.dataset.filter;
+            state.currentTrialIdx = 0;
+            state.currentMoveIdx = 0;
+            state.showingFinalState = false;
+            stopPlayback();
+            if ($('finalStateBtn')) $('finalStateBtn').classList.remove('active');
+            if ($('modeIndicator')) $('modeIndicator').classList.remove('active');
+            renderOutcomeFilter();
+            renderParticipantSelect();
+            renderTrialSelect();
+            renderTrial();
+        });
     });
 }
 
-let pickerFilter = 'all';
-let pickerSearch = '';
-let pickerChecked = new Set();
+// Trial picker modal
+let _pickerFilter = 'all';
+let _pickerSearch = '';
+let _pickerChecked = new Set();
 
 function openTrialPicker() {
-    pickerFilter = 'all';
-    pickerSearch = '';
-    pickerChecked = state.customPickedKeys
+    _pickerFilter = 'all';
+    _pickerSearch = '';
+    _pickerChecked = state.customPickedKeys
         ? new Set(state.customPickedKeys)
         : new Set((currentAnalysis().trials || []).map((t) => trialIdKey(t)));
-    const modal = $('trialPickerModal');
-    if (!modal) return;
-    modal.style.display = 'flex';
-    renderTrialPicker();
+    const overlay = $('trialPickerOverlay');
+    if (!overlay) return;
+    overlay.classList.remove('hidden');
+    _renderPickerContent();
 }
 
 function closeTrialPicker() {
-    const modal = $('trialPickerModal');
-    if (modal) modal.style.display = 'none';
+    const overlay = $('trialPickerOverlay');
+    if (overlay) overlay.classList.add('hidden');
 }
 
-function pickerPool() {
+function _pickerPool() {
     const all = state.allValidTrials || [];
     const { cleanMax, messyMin } = messinessThresholds();
     let pool;
-    if (pickerFilter === 'success') pool = all.filter((t) => t.outcome === 'success');
-    else if (pickerFilter === 'fail') pool = all.filter((t) => t.outcome !== 'success');
-    else if (pickerFilter === 'clean') pool = all.filter((t) => messiness(t) <= cleanMax);
-    else if (pickerFilter === 'messy') pool = all.filter((t) => messiness(t) >= messyMin);
-    else pool = all;
-
-    const q = pickerSearch.trim().toLowerCase();
-    if (!q) return pool;
-    return pool.filter((t) =>
-        String(t.participant || '').toLowerCase().includes(q) ||
-        String(t.condition || '').toLowerCase().includes(q) ||
-        String(t.outcome || '').toLowerCase().includes(q)
-    );
+    if (_pickerFilter === 'success')    pool = all.filter((t) => t.outcome === 'success');
+    else if (_pickerFilter === 'fail')  pool = all.filter((t) => t.outcome !== 'success');
+    else if (_pickerFilter === 'clean') pool = all.filter((t) => messiness(t) <= cleanMax);
+    else if (_pickerFilter === 'messy') pool = all.filter((t) => messiness(t) >= messyMin);
+    else                                pool = all;
+    if (_pickerSearch.trim()) {
+        const q = _pickerSearch.trim().toLowerCase();
+        pool = pool.filter((t) =>
+            String(t.participant || '').toLowerCase().includes(q) ||
+            String(t.condition || '').toLowerCase().includes(q) ||
+            String(t.outcome || '').toLowerCase().includes(q));
+    }
+    return pool;
 }
 
-function renderTrialPicker() {
+function _renderPickerContent() {
+    // Filter bar
     const fb = $('pickerFilterBar');
     if (fb) {
-        const filters = [['all', 'All'], ['success', 'Success'], ['fail', 'Failed'], ['clean', 'Clean'], ['messy', 'Messy']];
+        const filters = [
+            { key: 'all', label: 'All' }, { key: 'success', label: 'Success' },
+            { key: 'fail', label: 'Failed' }, { key: 'clean', label: 'Clean' }, { key: 'messy', label: 'Messy' }
+        ];
         fb.innerHTML = filters
-            .map(([k, label]) => `<button type="button" class="filter-chip${pickerFilter === k ? ' active' : ''}" data-pf="${k}">${label}</button>`)
+            .map((f) => `<button type="button" class="filter-btn${_pickerFilter === f.key ? ' active' : ''}" data-pf="${f.key}">${f.label}</button>`)
             .join('');
         fb.querySelectorAll('[data-pf]').forEach((btn) => {
-            btn.onclick = () => {
-                pickerFilter = btn.dataset.pf;
-                renderTrialPicker();
-            };
+            btn.addEventListener('click', () => { _pickerFilter = btn.dataset.pf; _renderPickerContent(); });
         });
     }
-
-    const search = $('pickerSearch');
-    if (search) {
-        search.value = pickerSearch;
-        search.oninput = () => {
-            pickerSearch = search.value;
-            renderTrialPicker();
-        };
-    }
-
-    const count = $('pickerCount');
-    if (count) count.textContent = `${pickerChecked.size} selected`;
-
+    // Search input
+    const si = $('pickerSearch');
+    if (si) { si.value = _pickerSearch; si.oninput = () => { _pickerSearch = si.value; _renderPickerContent(); }; }
+    // Selected count
+    const cl = $('pickerCount');
+    if (cl) cl.textContent = `${_pickerChecked.size} selected`;
+    // Trial list
     const list = $('pickerList');
     if (!list) return;
-    const pool = pickerPool();
-    if (!pool.length) {
-        list.innerHTML = '<p style="padding:8px;color:#6b7280">No trials match.</p>';
-        return;
-    }
-
+    const pool = _pickerPool();
+    if (pool.length === 0) { list.innerHTML = '<p class="muted" style="padding:8px">No trials match.</p>'; return; }
     list.innerHTML = pool.map((t) => {
         const key = trialIdKey(t);
-        const checked = pickerChecked.has(key) ? 'checked' : '';
+        const checked = _pickerChecked.has(key) ? 'checked' : '';
         const ok = t.outcome === 'success';
-        const icon = ok ? 'SUCCESS' : 'FAIL';
+        const oc = ok ? '#10b981' : '#ef4444';
         const mc = Number(t.move_count ?? (t.moves || []).length);
         const ms = typeof t.messiness_score === 'number' ? t.messiness_score.toFixed(2) : '?';
         const blankTag = (t.blank_card_count || 0) > 0 ? ' [B]' : '';
-        return `<label style="display:flex;align-items:center;gap:8px;padding:5px 6px;cursor:pointer;border-radius:6px">
-            <input type="checkbox" data-key="${key}" ${checked}>
-            <span style="color:${ok ? '#10b981' : '#ef4444'};font-weight:700">${icon}</span>
-            <span style="font-size:0.78rem">P${t.participant || 'N/A'} | ${t.condition || '?'} | ${mc} moves | mess ${ms}${blankTag}</span>
+        return `<label class="picker-item">
+            <input type="checkbox" class="picker-cb" data-key="${key}" ${checked} />
+            <span class="picker-outcome" style="color:${oc}">${ok ? '\u2713' : '\u2717'}</span>
+            <span class="picker-label">P${t.participant || 'N/A'} &middot; ${t.condition || '?'} &middot; ${mc} moves &middot; mess ${ms}${blankTag}</span>
         </label>`;
     }).join('');
-
-    list.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
-        cb.onchange = () => {
-            if (cb.checked) pickerChecked.add(cb.dataset.key);
-            else pickerChecked.delete(cb.dataset.key);
-            const c = $('pickerCount');
-            if (c) c.textContent = `${pickerChecked.size} selected`;
-        };
+    list.querySelectorAll('.picker-cb').forEach((cb) => {
+        cb.addEventListener('change', () => {
+            if (cb.checked) _pickerChecked.add(cb.dataset.key);
+            else _pickerChecked.delete(cb.dataset.key);
+            const cl2 = $('pickerCount');
+            if (cl2) cl2.textContent = `${_pickerChecked.size} selected`;
+        });
     });
-
-    $('pickerSelectAll').onclick = () => {
-        pickerPool().forEach((t) => pickerChecked.add(trialIdKey(t)));
-        renderTrialPicker();
-    };
-
-    $('pickerClearAll').onclick = () => {
-        pickerPool().forEach((t) => pickerChecked.delete(trialIdKey(t)));
-        renderTrialPicker();
-    };
-
-    $('pickerApply').onclick = () => {
-        state.customPickedKeys = pickerChecked.size ? new Set(pickerChecked) : null;
+    const sa = $('pickerSelectAll');
+    if (sa) sa.onclick = () => { _pickerPool().forEach((t) => _pickerChecked.add(trialIdKey(t))); _renderPickerContent(); };
+    const ca = $('pickerClearAll');
+    if (ca) ca.onclick = () => { _pickerPool().forEach((t) => _pickerChecked.delete(trialIdKey(t))); _renderPickerContent(); };
+    const ap = $('pickerApply');
+    if (ap) ap.onclick = () => {
+        state.customPickedKeys = _pickerChecked.size > 0 ? new Set(_pickerChecked) : null;
         if (currentAnalysis().id === 6) state.selectedParticipant = 'all';
         state.currentTrialIdx = 0;
         state.currentMoveIdx = 0;
         state.showingFinalState = false;
         stopPlayback();
         closeTrialPicker();
+        if ($('finalStateBtn')) $('finalStateBtn').classList.remove('active');
+        if ($('modeIndicator')) $('modeIndicator').classList.remove('active');
         renderOutcomeFilter();
         renderParticipantSelect();
         renderTrialSelect();
         renderTrial();
     };
-
-    $('pickerReset').onclick = () => {
+    const rp = $('pickerReset');
+    if (rp) rp.onclick = () => {
         state.customPickedKeys = null;
         if (currentAnalysis().id === 6) state.selectedParticipant = 'all';
         state.currentTrialIdx = 0;
@@ -936,42 +1029,134 @@ function renderTrialPicker() {
         state.showingFinalState = false;
         stopPlayback();
         closeTrialPicker();
+        if ($('finalStateBtn')) $('finalStateBtn').classList.remove('active');
+        if ($('modeIndicator')) $('modeIndicator').classList.remove('active');
         renderOutcomeFilter();
         renderParticipantSelect();
         renderTrialSelect();
         renderTrial();
     };
-
-    const modal = $('trialPickerModal');
-    if (modal) {
-        modal.onclick = (e) => {
-            if (e.target === modal) closeTrialPicker();
-        };
-    }
+    // Close on overlay click
+    const overlay = $('trialPickerOverlay');
+    if (overlay) overlay.onclick = (e) => { if (e.target === overlay) closeTrialPicker(); };
 }
 
-async function loadData() {
-    try {
-        const res = await fetch('/data/card_analysis_data.json', { cache: 'no-store' });
-        state.data = await res.json();
-    } catch (e) {
-        state.data = { analysis_types: [], statistics: {} };
+function numeric(v) {
+    return typeof v === 'number' && Number.isFinite(v) ? v : Number(v) || 0;
+}
+
+function avg(arr) {
+    if (!arr.length) return 0;
+    return arr.reduce((sum, v) => sum + numeric(v), 0) / arr.length;
+}
+
+function rate(part, total) {
+    if (!total) return 0;
+    return (part / total) * 100;
+}
+
+function chartLayout(yTitle, range = null) {
+    return {
+        margin: { t: 20, b: 45, l: 50, r: 10 },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: '#1f2937' },
+        yaxis: {
+            title: yTitle,
+            range: range || undefined
+        }
+    };
+}
+
+function trialKey(trial) {
+    return [
+        trial.participant || '',
+        trial.condition || '',
+        trial.outcome || '',
+        numeric(trial.move_count ?? (trial.moves || []).length),
+        Number(numeric(trial.messiness_score).toFixed(4))
+    ].join('|');
+}
+
+function getUniqueTrials() {
+    const all = (state.analysis || []).flatMap((analysis) => analysis.trials || []);
+    const map = new Map();
+    all.forEach((trial) => {
+        const normalized = normalizeTrial(trial);
+        if (normalized.moves.length > 0) {
+            map.set(trialKey(normalized), normalized);
+        }
+    });
+    return Array.from(map.values());
+}
+
+function resizeCharts() {
+    ['summaryChart', 'conditionChart', 'messinessChart', 'moveDistChart', 'blankChart', 'messinessBoxChart'].forEach((id) => {
+        const el = $(id);
+        if (el) Plotly.Plots.resize(el);
+    });
+}
+
+const EMBED_MIN = 520;
+const EMBED_MAX = 1800;
+const HEIGHT_THRESHOLD = 8;
+let lastHeight = 0;
+let heightTimer = null;
+
+function getTargetOrigin() {
+    const fromConfig = window.CARDS_CONFIG?.parentOrigin;
+    if (fromConfig) return fromConfig;
+    if (document.referrer) {
+        try {
+            return new URL(document.referrer).origin;
+        } catch (err) {
+            return '*';
+        }
     }
-    state.analysis = buildAnalysisData(state.data);
+    return '*';
+}
+
+function postEmbedHeight(force = false) {
+    if (!document.body.classList.contains('embed-mode')) return;
+    const h = Math.ceil($('app').getBoundingClientRect().height);
+    const clamped = Math.max(EMBED_MIN, Math.min(EMBED_MAX, h));
+    if (!force && Math.abs(clamped - lastHeight) <= HEIGHT_THRESHOLD) return;
+    lastHeight = clamped;
+    window.parent.postMessage({ type: 'cards-embed-height', height: clamped }, getTargetOrigin());
+}
+
+function scheduleEmbedHeight(force = false) {
+    if (!document.body.classList.contains('embed-mode')) return;
+    clearTimeout(heightTimer);
+    heightTimer = setTimeout(() => postEmbedHeight(force), 120);
+}
+
+function setupEmbedMode() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('embed') !== '1') return;
+    document.body.classList.add('embed-mode');
+    if (typeof ResizeObserver !== 'undefined') {
+        const observer = new ResizeObserver(() => scheduleEmbedHeight(false));
+        observer.observe($('app'));
+    }
+    window.addEventListener('resize', () => scheduleEmbedHeight(false));
+    window.addEventListener('load', () => scheduleEmbedHeight(true));
+    scheduleEmbedHeight(true);
 }
 
 async function init() {
-    setupTabs();
+    initTabs();
     setupEmbedMode();
     await loadData();
     renderStats();
+    // Initialize animation viewer eagerly on the overview page
     renderAnalysisSelect();
     renderOutcomeFilter();
     renderParticipantSelect();
     renderTrialSelect();
     renderTrial();
     bindControls();
-    renderCharts();
 }
 
 init();
+

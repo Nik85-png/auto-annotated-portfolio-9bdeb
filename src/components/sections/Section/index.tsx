@@ -23,7 +23,7 @@ export default function Section(props: SectionProps) {
 function SectionInset(props: SectionProps) {
     const { elementId, colors = 'colors-f', styles = {}, children } = props;
     return (
-        <div id={elementId || null} className={classNames('flex justify-center', styles.margin)}>
+        <div id={elementId || null} className={classNames('site-section flex justify-center', styles.margin)}>
             <div
                 className={classNames(
                     'flex flex-col items-center justify-center relative w-full',
@@ -52,7 +52,7 @@ function SectionFullWidth(props: SectionProps) {
             data-theme={colors}
             id={elementId || null}
             className={classNames(
-                'flex flex-col justify-center items-center',
+                'site-section flex flex-col justify-center items-center',
                 mapStyles({ height: styles.height ?? 'auto' }),
                 styles.margin,
                 styles.padding ?? 'py-12 px-4',

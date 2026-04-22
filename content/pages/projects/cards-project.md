@@ -28,25 +28,16 @@ Participants used an interactive 8x8 grid to arrange playing cards (Kings, Queen
 
 Core question: what separates successful problem-solvers from those who struggle?
 
-[Open the interactive analysis explorer in a new page](https://auto-annotated-portfolio-9bdeb.onrender.com/)
+The live viewer now supports participant-level progression analysis, including separate participant/trial selection for repeated attempts, retry-to-success tracing, and chronological trial inspection with messiness context.
+
+[Open the interactive analysis explorer](/cards-analysis/index.html)
 
 <a
-  href="https://auto-annotated-portfolio-9bdeb.onrender.com/play"
-  data-cards-play-cta="1"
-  style="display:none;margin-top:12px;padding:10px 14px;border-radius:10px;background:#146c94;color:#f2f5f7;text-decoration:none;"
+  href="/cards-analysis/index.html"
+  style="display:inline-block;margin-top:12px;padding:10px 14px;border-radius:10px;background:#146c94;color:#f2f5f7;text-decoration:none;"
 >
-  Try It Yourself (Beta)
+  Open Interactive Explorer
 </a>
-
-## Live Interactive Viewer
-
-<iframe
-  src="https://auto-annotated-portfolio-9bdeb.onrender.com/"
-  title="Interactive Card Sorting Analysis"
-  data-cards-embed="1"
-  style="width:100%;min-height:1240px;border:0;border-radius:12px;background:transparent;"
-  loading="lazy"
-></iframe>
 
 ## What We Measured
 
@@ -66,6 +57,22 @@ For each trial we captured:
 - Spatial organization pattern
 - Success or failure outcome
 - Strategic tool usage (blank cards)
+
+## Nine Analysis Views
+
+The explorer is organized into **9 analysis views**, each designed for a different decision question:
+
+1. **Successful Clean (15+ moves)**: long successful sequences with organized play
+2. **Failed Messy (<15 moves)**: short unsuccessful attempts with unstable organization
+3. **All Successful**: full successful pool across conditions
+4. **All Failed**: full failed pool for failure-pattern comparison
+5. **Blank-Card Impact**: compares outcomes and behavior with vs without blank-card usage
+6. **Retry & Success Recovery Progression**: participant-level repeated attempts with separate participant/trial selection
+7. **Condition Focus (KQ/KQB/KQJ/KQJB)**: behavior split by rule-set complexity
+8. **Move-Efficiency Patterns**: compares low-move vs high-move completion strategies
+9. **Messiness & Outcome Relationship**: links spatial organization quality to success probability
+
+Together, these views let you move from broad cohort patterns to participant-level progression without leaving the same interface.
 
 ## Key Findings
 
@@ -111,7 +118,10 @@ Spatial organization was a strong predictor of performance.
 
 - Built animated card-movement viewer with playback controls
 - Built grid-based visualization showing arrangement evolution by move
-- Added filter-based exploration (participant, condition, outcome)
+- Added analysis-specific filtering across participant, condition, and outcome views
+- Added separate participant and trial dropdowns for repeated-attempt analysis
+- Added retry and success-recovery progression views by participant
+- Added chronological trial labels with messiness score context
 - Added move-level highlighting and trial detail panels
 
 ### Quantitative Analysis
@@ -126,18 +136,20 @@ Spatial organization was a strong predictor of performance.
 
 Use the explorer to:
 
-1. Select trials by condition/outcome
-2. Watch move-by-move placement animations
-3. Compare successful vs failed strategies
-4. Filter by blank-card usage
-5. Explore repeated attempts by participant
+1. Select an analysis type (clean success, failed messy, all successful, all failed, blank-card impact, participant progression)
+2. In participant progression, choose a participant first, then choose one of that participant's trials from the second dropdown
+3. Watch move-by-move placement animations and inspect final board states
+4. Review trials in chronological order (Trial #1, Trial #2, etc.) with messiness values
+5. Compare retry sequences and success-recovery sequences for the same participant
+6. Use condition/outcome-specific analyses to compare strategy patterns across groups
 
 Legend:
 
 - Gold highlight = latest move
 - Grid coordinates = exact 0-7 positions
 - Move counter = step progression
-- Trial panel = outcome and messiness metadata
+- Trial panel = outcome, condition, trial order, and messiness metadata
+- Progression tags = RETRY or SUCCESS RECOVERY
 
 ## Statistical Notes
 
