@@ -49,20 +49,20 @@ The full wide-screen page includes the interactive tool panel, leakage-audit wal
 
 ## The research tool
 
-A Streamlit research prototype loads the final trained models and returns predicted risk for each outcome horizon.
+A live Flask research prototype now runs the final trained models and returns predicted risk for each outcome horizon directly from a Render-hosted inference service.
 
 - **Loads the final trained models** — Random Forest for short horizons, XGBoost for 6-month mortality and readmission.
 - **Maps readable clinical labels to model-safe feature names** — BNP, LVEF, NYHA etc. resolve to the exact encoded columns the model was trained on.
 - **Fills missing inputs with training medians** — same defaults used during development.
 - **Returns predicted risks, not decisions** — output is a probability, not a recommendation.
 
-It is a **research prototype only** — a demo of the pipeline's behaviour, not a clinical tool. There is no live clinical deployment. The full project page embeds a non-clinical demo form; the source also runs locally:
+It is still a **research prototype only** - not a clinical tool - but it is now publicly deployed as a live Render-hosted Flask app and embedded into the full HF-RISK project page. The app uses the final leakage-clean models, curated discharge-time inputs, training-median defaults for hidden fields, and live SHAP for 6-month mortality. The source also runs locally:
 
 ```
 git clone https://github.com/Nik85-png/hf-risk-heart-failure-ml.git
-cd hf-risk-heart-failure-ml/MSc\ Project
+cd hf-risk-heart-failure-ml/hf_risk_render
 pip install -r requirements.txt
-streamlit run 06_streamlit_tool.py
+python app.py
 ```
 
 ## The leakage audit — and why AUROC went down

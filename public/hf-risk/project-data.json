@@ -12,7 +12,7 @@
     "n_patients": 2008,
     "n_variables": 143,
     "github": "https://github.com/Nik85-png",
-    "tool_url": "",
+    "tool_url": "https://hf-risk-live.onrender.com/",
     "tagline": "A leakage-clean machine learning study predicting heart failure outcomes and testing transportability on MIMIC-IV.",
     "research_question": "Can machine learning models trained on discharge-time clinical data predict adverse outcomes after heart failure hospitalisation, and how well do those models generalise to an external MIMIC-IV cohort?"
   },
@@ -357,7 +357,7 @@
       "Basophil ratio",
       "Creatine kinase"
     ],
-    "tool_url": "",
+    "tool_url": "https://hf-risk-live.onrender.com/",
     "key_insight": "Early models achieved higher AUROC, including 0.8186 for 6-month mortality, but audit checks identified administrative, temporal, and post-outcome proxy variables. After removing these, the final leakage-clean model reported more conservative but defensible performance: 6-month mortality AUROC 0.7098 internally and 0.5995 on MIMIC-IV external validation."
   },
   "glossary": [

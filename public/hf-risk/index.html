@@ -446,11 +446,37 @@ a:hover{text-decoration:none}
   overflow:auto;
 }
 .tool-aside .local-run pre span{color:color-mix(in srgb, var(--bg) 55%, transparent)}
+.tool-embed-shell{
+  border-top:1px solid var(--rule-soft);
+  padding:clamp(18px, 2vw, 28px);
+  background:color-mix(in srgb, var(--fg) 3%, transparent);
+  display:grid;
+  gap:14px;
+}
+.tool-embed-frame{
+  width:100%;
+  min-height:1180px;
+  border:1px solid var(--rule);
+  border-radius:4px;
+  background:linear-gradient(180deg, color-mix(in srgb, var(--bg) 74%, white), color-mix(in srgb, var(--accent) 4%, var(--bg)));
+}
+.tool-embed-note{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  align-items:flex-start;
+  font-size:12px;
+  color:var(--fg-muted);
+}
+.tool-embed-note p{max-width:54ch}
+.tool-launch-actions{display:flex; gap:8px; flex-wrap:wrap}
 
 @media (max-width:960px){
   .tool-wrap{grid-template-columns:1fr}
   .hero-aside{position:static}
   .hero-grid{grid-template-columns:1fr}
+  .tool-embed-frame{min-height:1440px}
 }
 
 /* ---------- Audit story ---------- */
@@ -979,48 +1005,40 @@ body.lb-open{overflow:hidden}
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num">01 · Research tool</div>
-        <h2>A research prototype, not a product.</h2>
+        <div class="section-num">01 - Research tool</div>
+        <h2>The live prototype now runs the real models.</h2>
       </div>
-      <p class="lede">The Streamlit prototype loads the final trained models, maps readable inputs to the model-safe feature names, fills missing values with training medians, and returns a predicted risk for each horizon. It exists for <b>testing and demonstration</b> — never for clinical decisions.</p>
+      <p class="lede">This section now embeds the real HF-RISK inference service: a Flask app hosted separately from the Netlify case-study page, running the final leakage-clean models and generating patient-level SHAP for the 6-month mortality model. It is still <b>research-only</b> - public demonstration, never clinical use.</p>
     </div>
 
     <div class="tool-wrap">
       <div class="tool-panel" aria-label="HF-RISK prototype">
         <div class="tool-chrome">
           <div class="dots" aria-hidden="true"><span></span><span></span><span></span></div>
-          <span>hf-risk · streamlit prototype · demo inputs</span>
-          <span class="tool-tag live">Demo mode</span>
+          <span>hf-risk - render service - live inference</span>
+          <span class="tool-tag live">Live prototype</span>
         </div>
         <div class="tool-body">
           <div class="tool-title-row">
-            <h3>Predict outcomes at discharge</h3>
-            <span class="tool-tag">143 features · training medians for blanks</span>
+            <h3>Render-hosted Flask app with real model inference</h3>
+            <span class="tool-tag">4 outcomes - live SHAP for 6m mortality</span>
           </div>
-          <form class="tool-form" id="demoForm" onsubmit="return false;">
-            <div class="tool-field"><label for="f_age">Age</label><input id="f_age" type="number" min="18" max="110" value="78" /></div>
-            <div class="tool-field"><label for="f_nyha">NYHA class</label>
-              <select id="f_nyha"><option>I</option><option>II</option><option selected>III</option><option>IV</option></select>
-            </div>
-            <div class="tool-field"><label for="f_bnp">BNP (pg/mL)</label><input id="f_bnp" type="number" min="0" step="1" value="1280" /></div>
-            <div class="tool-field"><label for="f_lvef">LVEF (%)</label><input id="f_lvef" type="number" min="5" max="80" value="32" /></div>
-            <div class="tool-field"><label for="f_gcs">GCS</label><input id="f_gcs" type="number" min="3" max="15" value="14" /></div>
-            <div class="tool-field"><label for="f_ckd">Moderate–severe CKD</label>
-              <select id="f_ckd"><option value="0">No</option><option value="1" selected>Yes</option></select>
-            </div>
-          </form>
-          <div class="tool-run">
-            <span class="help">All other features default to the training-set median. This reproduces the prototype's behaviour for missing clinical inputs.</span>
-            <button class="btn" id="runBtn" type="button">Predict ↻</button>
-          </div>
+          <p style="font-size:13px; color:var(--fg-muted); max-width:58ch">The Netlify page stays the narrative shell. The actual prediction engine now lives in a dedicated Flask service so the public tool uses the same leakage-clean models described elsewhere on this page.</p>
         </div>
-        <div class="tool-output">
-          <h4>Predicted risk</h4>
-          <div class="risk-row" id="riskRow">
-            <div class="risk-item mid"><span class="rname">28-day mortality</span><span class="rval" data-out="r1">—</span><div class="risk-bar"><i style="width:0%"></i></div></div>
-            <div class="risk-item mid"><span class="rname">3-month mortality</span><span class="rval" data-out="r2">—</span><div class="risk-bar"><i style="width:0%"></i></div></div>
-            <div class="risk-item mid"><span class="rname">6-month mortality</span><span class="rval" data-out="r3">—</span><div class="risk-bar"><i style="width:0%"></i></div></div>
-            <div class="risk-item mid"><span class="rname">6-month readmission</span><span class="rval" data-out="r4">—</span><div class="risk-bar"><i style="width:0%"></i></div></div>
+        <div class="tool-embed-shell">
+          <iframe
+            class="tool-embed-frame"
+            title="HF-RISK live research prototype"
+            src="https://hf-risk-live.onrender.com/?embed=1"
+            loading="lazy"
+            referrerpolicy="strict-origin-when-cross-origin"
+          ></iframe>
+          <div class="tool-embed-note">
+            <p>If the embedded view feels cramped on your device, open the full live tool in a separate tab. The embedded version and the full-page version call the same Render-hosted inference service.</p>
+            <div class="tool-launch-actions">
+              <a class="btn" href="https://hf-risk-live.onrender.com/" target="_blank" rel="noopener">Open full live tool <span class="arrow">-></span></a>
+              <a class="btn btn-ghost" href="https://github.com/Nik85-png/hf-risk-heart-failure-ml" target="_blank" rel="noopener">View source</a>
+            </div>
           </div>
         </div>
       </div>
@@ -1028,29 +1046,30 @@ body.lb-open{overflow:hidden}
       <aside class="tool-aside">
         <h4>What the tool actually does</h4>
         <ul>
-          <li><span class="marker">→</span><span><b>Loads the final trained models.</b> One per outcome: Random Forest for short horizons, XGBoost for 6-month mortality and readmission.</span></li>
-          <li><span class="marker">→</span><span><b>Maps readable names to model-safe features.</b> Clinical labels (BNP, LVEF, NYHA) resolve to the exact encoded columns the model was trained on.</span></li>
-          <li><span class="marker">→</span><span><b>Fills missing inputs with training medians.</b> Same defaults used during development — no implicit imputation surprises.</span></li>
-          <li><span class="marker">→</span><span><b>Returns predicted risks,</b> not decisions. Output is a probability; it is not a recommendation.</span></li>
+          <li><span class="marker">-></span><span><b>Runs the final trained models.</b> Random Forest remains the winner for 28-day and 3-month mortality; XGBoost remains the final model for 6-month mortality and readmission.</span></li>
+          <li><span class="marker">-></span><span><b>Curates the visible inputs.</b> Only the most interpretable discharge-time variables are shown publicly; hidden model-required features fall back to training medians.</span></li>
+          <li><span class="marker">-></span><span><b>Recomputes engineered flags.</b> BNP, creatinine, and reduced-EF features are derived again from the live inputs so the public form matches the original pipeline logic.</span></li>
+          <li><span class="marker">-></span><span><b>Returns real patient-level SHAP.</b> The 6-month mortality output includes a live explanation panel showing what pushed the prediction up or down.</span></li>
         </ul>
 
         <div class="safety-note">
-          <b>Research-only.</b> No live clinical deployment. Do not enter real patient data. The prototype is a demo of the research pipeline's behaviour.
+          <b>Research-only.</b> This is a live public prototype, but it is still not clinically validated. Do not use it for diagnosis, triage, treatment, or any other patient-care decision.
         </div>
 
         <div class="local-run">
-          <b style="font-family:var(--font-display); letter-spacing:-.005em">Run it locally</b>
+          <b style="font-family:var(--font-display); letter-spacing:-.005em">Deployment architecture</b>
           <pre><span># clone the repo</span>
 git clone https://github.com/Nik85-png/hf-risk-heart-failure-ml.git
-cd hf-risk-heart-failure-ml/MSc\ Project
-<span># install + launch</span>
+cd hf-risk-heart-failure-ml/hf_risk_render
+<span># run the Flask service locally</span>
 pip install -r requirements.txt
-streamlit run 06_streamlit_tool.py</pre>
+python app.py
+<span># Render hosts the service, Netlify embeds it</span></pre>
         </div>
 
         <div style="display:flex; gap:8px; flex-wrap:wrap">
-          <a class="btn" href="https://github.com/Nik85-png/hf-risk-heart-failure-ml" target="_blank" rel="noopener">GitHub source ↗</a>
-          <a class="btn btn-ghost" href="https://github.com/Nik85-png/hf-risk-heart-failure-ml/blob/main/README.md" target="_blank" rel="noopener">README</a>
+          <a class="btn" href="https://github.com/Nik85-png/hf-risk-heart-failure-ml" target="_blank" rel="noopener">GitHub source -></a>
+          <a class="btn btn-ghost" href="https://hf-risk-live.onrender.com/" target="_blank" rel="noopener">Open standalone tool</a>
         </div>
       </aside>
     </div>
@@ -1474,59 +1493,6 @@ streamlit run 06_streamlit_tool.py</pre>
     <span>Built as part of the MSc dissertation project.</span>
   </div>
 </footer>
-
-<script>
-/* ---------- Tool demo: deterministic pseudo-risk from inputs ---------- */
-(function(){
-  const base = { r1: 0.04, r2: 0.08, r3: 0.14, r4: 0.28 };
-  const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
-
-  function compute(){
-    const age  = +document.getElementById('f_age').value || 70;
-    const nyha = {I:1,II:2,III:3,IV:4}[document.getElementById('f_nyha').value] || 3;
-    const bnp  = +document.getElementById('f_bnp').value || 600;
-    const lvef = +document.getElementById('f_lvef').value || 45;
-    const gcs  = +document.getElementById('f_gcs').value  || 15;
-    const ckd  = +document.getElementById('f_ckd').value  || 0;
-
-    // Simple monotonic risk adjustments — reflects the direction of the real drivers.
-    const mAge  = clamp((age  - 65) / 60, 0, 1);      // age 65+ adds risk
-    const mNyha = clamp((nyha - 1)  / 3,  0, 1);      // class IV > I
-    const mBnp  = clamp(Math.log10(Math.max(10, bnp)/100) / 1.6, 0, 1);
-    const mLvef = clamp((45 - lvef) / 40, 0, 1);      // low LVEF adds risk
-    const mGcs  = clamp((15 - gcs)  / 12, 0, 1);      // low GCS adds risk
-    const mCkd  = ckd ? 1 : 0;
-
-    const factor = 0.18*mAge + 0.22*mNyha + 0.16*mBnp + 0.14*mLvef + 0.20*mGcs + 0.10*mCkd;
-    const out = {
-      r1: clamp(base.r1 + 0.42 * factor, 0.01, 0.72),
-      r2: clamp(base.r2 + 0.55 * factor, 0.02, 0.80),
-      r3: clamp(base.r3 + 0.62 * factor, 0.03, 0.84),
-      r4: clamp(base.r4 + 0.40 * factor, 0.08, 0.82),
-    };
-
-    Object.entries(out).forEach(([k, v]) => {
-      const el = document.querySelector(`[data-out="${k}"]`);
-      if (!el) return;
-      el.textContent = (v*100).toFixed(1) + '%';
-      const row = el.closest('.risk-item');
-      const bar = row && row.querySelector('.risk-bar i');
-      if (bar) bar.style.width = (v*100).toFixed(1) + '%';
-      if (row) {
-        row.classList.remove('high','mid');
-        row.classList.add(v > 0.45 ? 'high' : 'mid');
-      }
-    });
-  }
-
-  document.getElementById('runBtn').addEventListener('click', compute);
-  ['f_age','f_nyha','f_bnp','f_lvef','f_gcs','f_ckd'].forEach(id=>{
-    document.getElementById(id).addEventListener('input', compute);
-    document.getElementById(id).addEventListener('change', compute);
-  });
-  compute();
-})();
-</script>
 
 <!-- Lightbox -->
 <div class="lightbox" id="lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Expanded figure">
