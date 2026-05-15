@@ -470,6 +470,36 @@ a:hover{text-decoration:none}
 .tool-embed-note{display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-start; font-size:12px; color:var(--fg-muted)}
 .tool-embed-note p{max-width:54ch}
 .tool-launch-actions{display:flex; gap:8px; flex-wrap:wrap}
+.tool-primary-cta{
+  position:relative;
+  padding:14px 20px;
+  border-radius:999px;
+  border:1px solid color-mix(in srgb, var(--accent) 55%, var(--fg));
+  background:linear-gradient(120deg, color-mix(in srgb, var(--accent) 18%, white), color-mix(in srgb, var(--theme-secondary) 28%, white));
+  color:var(--fg);
+  box-shadow:0 18px 34px color-mix(in srgb, var(--accent) 18%, transparent);
+  font-size:12px;
+  letter-spacing:.18em;
+}
+.tool-primary-cta:hover{
+  background:linear-gradient(120deg, color-mix(in srgb, var(--accent) 92%, white 8%), color-mix(in srgb, var(--theme-secondary) 72%, white 28%));
+  color:var(--theme-on-primary);
+  border-color:color-mix(in srgb, var(--accent) 85%, var(--fg));
+  box-shadow:0 22px 42px color-mix(in srgb, var(--accent) 26%, transparent);
+}
+.tool-primary-cta::after{
+  content:'Live';
+  position:absolute;
+  top:-10px;
+  right:16px;
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:9px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  background:var(--fg);
+  color:var(--bg);
+}
 
 @media (max-width:960px){
   .tool-wrap{grid-template-columns:1fr}
@@ -630,6 +660,16 @@ a:hover{text-decoration:none}
   font-size:13px; color:var(--fg-muted); line-height:1.65;
 }
 .shap-note b{color:var(--fg); font-weight:500}
+.shap-context{
+  margin-top:14px;
+  padding:14px 16px 14px 18px;
+  border-left:2px solid color-mix(in srgb, var(--accent) 55%, var(--rule));
+  background:color-mix(in srgb, var(--accent) 5%, transparent);
+  font-size:12.5px;
+  color:var(--fg-muted);
+  line-height:1.75;
+}
+.shap-context b{color:var(--fg)}
 
 /* ---------- Split block (MIMIC external) ---------- */
 .split{
@@ -1039,7 +1079,7 @@ body.lb-open{overflow:hidden}
           <div class="tool-embed-note">
             <p>Opening the tool in a dedicated tab gives it enough room to show the structured form, the four probability cards, and the explanation panel cleanly on both desktop and mobile.</p>
             <div class="tool-launch-actions">
-              <a class="btn" href="https://hf-risk-heart-failure-ml.onrender.com/" target="_blank" rel="noopener">Open live tool <span class="arrow">-></span></a>
+              <a class="btn tool-primary-cta" href="https://hf-risk-heart-failure-ml.onrender.com/" target="_blank" rel="noopener">Open the live HF-RISK tool <span class="arrow">-></span></a>
               <a class="btn btn-ghost" href="https://github.com/Nik85-png/hf-risk-heart-failure-ml" target="_blank" rel="noopener">View source</a>
             </div>
           </div>
@@ -1247,6 +1287,9 @@ python app.py
 
         <div class="shap-note">
           <b>What changed after the audit.</b> Earlier versions of this list ranked <i>discharge day</i> among the top contributors. That variable encoded hospital-process timing rather than patient physiology — it was removed. The revised ranking is dominated by neurological status, renal function, cardiac structure, and lab biomarkers, which is consistent with clinical expectation for heart failure prognosis.
+        </div>
+        <div class="shap-context">
+          <b>Context on GCS.</b> GCS ranks highly here, but it is not acting as a broad continuous signal across the whole cohort. In the full dataset, <b>97.2%</b> of patients had a GCS of 15. The model is therefore identifying a small, clinically severe subgroup with impaired consciousness rather than overfitting to everyday variation in alert patients.
         </div>
       </div>
 
