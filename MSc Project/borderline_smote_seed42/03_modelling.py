@@ -141,7 +141,7 @@ for outcome_label, outcome_col in OUTCOME_MAP.items():
 
     y_tr = y_train[outcome_col]
     y_te = y_test[outcome_col]
-    apply_smote = needs_smote(y_tr)
+    apply_smote = needs_smote(y_tr) and int(y_tr.sum()) > 1
     print(f"  BorderlineSMOTE: {'YES' if apply_smote else 'no (balanced enough)'}")
 
     best_auc  = -1

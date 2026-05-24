@@ -268,11 +268,14 @@ print(f"Test positive rate : {y_test[primary_target].mean()*100:.2f}%")
 # Proposal alignment: demonstrate BorderlineSMOTE + class weighting strategy.
 y_primary = y_train[primary_target]
 if y_primary.mean() < 0.10:
-    smote = BorderlineSMOTE(random_state=42, k_neighbors=min(5, max(1, int(y_primary.sum()) - 1)))
-    _, y_sm = smote.fit_resample(X_train, y_primary)
-    print("\nBorderlineSMOTE demonstration (primary target)")
-    print(f"Before: {y_primary.value_counts().to_dict()}")
-    print(f"After : {pd.Series(y_sm).value_counts().to_dict()}")
+    if int(y_primary.sum()) > 1:
+        smote = BorderlineSMOTE(random_state=42, k_neighbors=min(5, max(1, int(y_primary.sum()) - 1)))
+        _, y_sm = smote.fit_resample(X_train, y_primary)
+        print("\nBorderlineSMOTE demonstration (primary target)")
+        print(f"Before: {y_primary.value_counts().to_dict()}")
+        print(f"After : {pd.Series(y_sm).value_counts().to_dict()}")
+    else:
+        print("\nPrimary target has too few positives for BorderlineSMOTE demonstration; skipped.")
 else:
     print("\nPrimary target is not severely imbalanced; BorderlineSMOTE demonstration skipped.")
 
